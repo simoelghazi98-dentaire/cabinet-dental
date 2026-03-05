@@ -8,9 +8,9 @@
 
 <!-- ══════════ FIREBASE SDK ══════════ -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getDatabase, ref, push, set, onValue, remove, update, goOnline }
-  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, set, onValue, remove, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ╔══════════════════════════════════════════════════════════════════════╗
 // ║  🔴 ÉTAPE 1 — Remplacez ces valeurs par vos propres clés Firebase   ║
@@ -42,19 +42,8 @@ try {
     window._onValue = onValue;
     window._remove = remove;
     window._update = update;
-    window._goOnline = goOnline;
     window.firebaseReady = true;
-    goOnline(db);
     console.log("✅ Firebase connecté");
-    // Directly set green dot as soon as Firebase loads
-    setTimeout(()=>{
-      const d=document.getElementById('connDot');
-      const l=document.getElementById('connLabel');
-      const s=document.getElementById('syncStatus');
-      if(d){d.className='dot green';}
-      if(l){l.textContent='Synchronisé';}
-      if(s){s.textContent='🟢 En ligne';}
-    }, 100);
   } else {
     console.warn("⚠️ Firebase non configuré — mode démo local");
     window.firebaseReady = false;
@@ -245,6 +234,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-m
 <div id="connectionDot">
   <div class="dot orange" id="connDot"></div>
   <span id="connLabel">Connexion...</span>
+</div>
 </div>
 
 <!-- ══════════ SIDEBAR ══════════ -->
@@ -651,7 +641,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-m
             <option value="D780">D780 — Dent ou crochet ajouté / remplacé</option>
           </optgroup>
           <optgroup label="🦴 Implantologie">
-            <option value="implant_pose">Pose d\'implant dentaire</option>
+            <option value="implant_pose">Pose d'implant dentaire</option>
             <option value="implant_ccm">Implant + Couronne CCM</option>
             <option value="implant_ccc">Implant + Couronne CCC (Zircone)</option>
             <option value="implant_imax">Implant + Couronne IMAX</option>
@@ -799,85 +789,85 @@ const toothNames = {
 };
 const acteInfo = {
   // ── RADIODIAGNOSTIC ──
-  'T156': {title:'T156 — 1er cliché rétro-alvéolaire',       desc:"Premier cliché intra-buccal rétro-alvéolaire par examen radiographique. Code B.O.N.",   tarif:40, code:'T156'},
-  'T157': {title:'T157 — 2ème cliché rétro-alvéolaire',      desc:"Deuxième cliché rétro-alvéolaire au cours du même examen. Code B.O.N.",                  tarif:25, code:'T157'},
-  'T158': {title:'T158 — Bilan complet rétro-alvéolaire',    desc:"Bilan complet en radiodiagnostic par dent ou groupe de dents contiguës. Code B.O.N.",    tarif:256,code:'T158'},
-  'T169': {title:'T169 — Examen radiographique numérique',   desc:"Examen numérique intra-buccal (status). Au moins 10 clichés. Code B.O.N.",               tarif:260,code:'T169'},
+  'T156': {title:'T156 — 1er cliché rétro-alvéolaire',       desc:'Premier cliché intra-buccal rétro-alvéolaire par examen radiographique. Code B.O.N.',   tarif:40, code:'T156'},
+  'T157': {title:'T157 — 2ème cliché rétro-alvéolaire',      desc:'Deuxième cliché rétro-alvéolaire au cours du même examen. Code B.O.N.',                  tarif:25, code:'T157'},
+  'T158': {title:'T158 — Bilan complet rétro-alvéolaire',    desc:'Bilan complet en radiodiagnostic par dent ou groupe de dents contiguës. Code B.O.N.',    tarif:256,code:'T158'},
+  'T169': {title:'T169 — Examen radiographique numérique',   desc:'Examen numérique intra-buccal (status). Au moins 10 clichés. Code B.O.N.',               tarif:260,code:'T169'},
   // ── SOINS CONSERVATEURS ──
-  'D700': {title:'D700 — Obturation définitive 1 face',      desc:"Obturation dentaire définitive, 1 face. Cavité simple. Code B.O.N. D700.",               tarif:100,code:'D700'},
-  'D700_2':{title:'D700 — Obturation définitive 2 faces',    desc:"Obturation dentaire définitive, 2 faces ou plus. Code B.O.N. D700.",                     tarif:150,code:'D700'},
-  'D701': {title:'D701 — Obturation composite',              desc:"Cavité composée, traitement global intéressant 2 faces. Composite ou amalgame. Code D701.",tarif:100,code:'D701'},
-  'D707': {title:'D707 — Hygiène bucco-dentaire',            desc:"Détartrage complet sus et sous-gingival (2 séances max), soins parodontaux. Code D707.",  tarif:40, code:'D707'},
-  'D708': {title:'D708 — Détartrage complet',                desc:"Détartrage complet toutes surfaces. Séance unique. Code B.O.N. D708.",                    tarif:40, code:'D708'},
-  'D710': {title:'D710 — Scellement prophylactique',         desc:"Scellement des puits, sillons et fissures. Dents 1ères et 2èmes molaires permanentes. D710.",tarif:50,code:'D710'},
+  'D700': {title:'D700 — Obturation définitive 1 face',      desc:'Obturation dentaire définitive, 1 face. Cavité simple. Code B.O.N. D700.',               tarif:100,code:'D700'},
+  'D700_2':{title:'D700 — Obturation définitive 2 faces',    desc:'Obturation dentaire définitive, 2 faces ou plus. Code B.O.N. D700.',                     tarif:150,code:'D700'},
+  'D701': {title:'D701 — Obturation composite',              desc:'Cavité composée, traitement global intéressant 2 faces. Composite ou amalgame. Code D701.',tarif:100,code:'D701'},
+  'D707': {title:'D707 — Hygiène bucco-dentaire',            desc:'Détartrage complet sus et sous-gingival (2 séances max), soins parodontaux. Code D707.',  tarif:40, code:'D707'},
+  'D708': {title:'D708 — Détartrage complet',                desc:'Détartrage complet toutes surfaces. Séance unique. Code B.O.N. D708.',                    tarif:40, code:'D708'},
+  'D710': {title:'D710 — Scellement prophylactique',         desc:'Scellement des puits, sillons et fissures. Dents 1ères et 2èmes molaires permanentes. D710.',tarif:50,code:'D710'},
   // ── ENDODONTIE ──
-  'D702': {title:'D702 — Pulpotomie + soins coronaires',     desc:"Traitement global : pulpotomie + soins coronaires de la chambre. Code B.O.N. D702.",      tarif:70, code:'D702'},
-  'D703': {title:'D703 — TC monoradiculaire',                desc:"Pulpectomie, mise en forme et obturation 3D — 1 canal (incisives, canines). Code D703.",  tarif:100,code:'D703'},
-  'D704': {title:'D704 — TC pluriradiculaire',               desc:"Pulpectomie + soins canalaires complets — molaires/prémolaires (2-4 canaux). Code D704.", tarif:150,code:'D704'},
-  'D705_mol': {title:'D705 — Groupe molaire (TC global)',    desc:"Pulpectomie coronaire + soins conductés à une gangrène pulpaire. Groupe molaire. D705.",   tarif:150,code:'D705'},
-  'D705_prem':{title:'D705 — Groupe prémolaire (TC global)', desc:"Pulpectomie coronaire + soins conductés à une gangrène pulpaire. Prémolaire. D705.",      tarif:100,code:'D705'},
-  'DTR_D48':  {title:'DTR — Retraitement canalaire monor.',  desc:"Retraitement canalaire monoradiculaire (désobturation + retraitement). Code DTR D48.",    tarif:200,code:'DTR'},
-  'DTR_D24':  {title:'DTR — Retraitement canalaire plurir.', desc:"Retraitement canalaire pluriradiculaire complet. Code DTR D24.",                           tarif:300,code:'DTR'},
+  'D702': {title:'D702 — Pulpotomie + soins coronaires',     desc:'Traitement global : pulpotomie + soins coronaires de la chambre. Code B.O.N. D702.',      tarif:70, code:'D702'},
+  'D703': {title:'D703 — TC monoradiculaire',                desc:'Pulpectomie, mise en forme et obturation 3D — 1 canal (incisives, canines). Code D703.',  tarif:100,code:'D703'},
+  'D704': {title:'D704 — TC pluriradiculaire',               desc:'Pulpectomie + soins canalaires complets — molaires/prémolaires (2-4 canaux). Code D704.', tarif:150,code:'D704'},
+  'D705_mol': {title:'D705 — Groupe molaire (TC global)',    desc:'Pulpectomie coronaire + soins conductés à une gangrène pulpaire. Groupe molaire. D705.',   tarif:150,code:'D705'},
+  'D705_prem':{title:'D705 — Groupe prémolaire (TC global)', desc:'Pulpectomie coronaire + soins conductés à une gangrène pulpaire. Prémolaire. D705.',      tarif:100,code:'D705'},
+  'DTR_D48':  {title:'DTR — Retraitement canalaire monor.',  desc:'Retraitement canalaire monoradiculaire (désobturation + retraitement). Code DTR D48.',    tarif:200,code:'DTR'},
+  'DTR_D24':  {title:'DTR — Retraitement canalaire plurir.', desc:'Retraitement canalaire pluriradiculaire complet. Code DTR D24.',                           tarif:300,code:'DTR'},
   // ── EXTRACTIONS SIMPLES ──
-  'D713': {title:'D713 — Extraction dent permanente',        desc:"Avulsion dent permanente visible sur arcade. Anesthésie locale. Code B.O.N. D713.",       tarif:50, code:'D713'},
-  'D714': {title:'D714 — Extraction 2 dents permanentes',    desc:"Avulsion de 2 dents permanentes au cours de la même séance. Code B.O.N. D714.",           tarif:80, code:'D714'},
-  'D716': {title:'D716 — Extraction dent lactale (enfant)',  desc:"Extraction dent temporaire chez enfant. Anesthésie locale. Code B.O.N. D716.",             tarif:40, code:'D716'},
-  'D717': {title:'D717 — Extraction par alvéolectomie',      desc:"3 à 12 extractions par alvéolectomie, anesthésie générale. Code B.O.N. D717.",             tarif:250,code:'D717'},
-  'D720': {title:'D720 — Extraction dents de sagesse',       desc:"Avulsion dents de sagesse incluses ou semi-incluses. Code B.O.N. D720.",                  tarif:200,code:'D720'},
-  'D721': {title:'D721 — Extraction dent de germe',          desc:"Extraction de dent de germe. Radiographie préopératoire obligatoire. Code D721.",          tarif:200,code:'D721'},
-  'D722': {title:'D722 — Extraction dent incluse/enclavée',  desc:"Extraction dent incluse ou enclavée (couronne, branche montante). Code D722.",             tarif:80, code:'D722'},
-  'D724': {title:'D724 — Germectomie',                       desc:"Germectomie pour une canine ou dent de sagesse. Anesthésie locale. Code D724.",            tarif:80, code:'D724'},
-  'D728': {title:'D728 — Extraction dent sous-muqueuse',     desc:"Extraction dent sous-muqueuse ou surnuméraire. Code B.O.N. D728.",                        tarif:60, code:'D728'},
-  'D730': {title:'D730 — Extraction chirurgicale (couronne)',desc:"Extraction chirurgicale dent incluse avec lambeau — couronne ou branche. Code D730.",       tarif:100,code:'D730'},
-  'D731': {title:'D731 — Extraction + branche montante',     desc:"Extraction chirurgicale dent permanente incluse + traitement branche montante. D731.",     tarif:150,code:'D731'},
+  'D713': {title:'D713 — Extraction dent permanente',        desc:'Avulsion dent permanente visible sur arcade. Anesthésie locale. Code B.O.N. D713.',       tarif:50, code:'D713'},
+  'D714': {title:'D714 — Extraction 2 dents permanentes',    desc:'Avulsion de 2 dents permanentes au cours de la même séance. Code B.O.N. D714.',           tarif:80, code:'D714'},
+  'D716': {title:'D716 — Extraction dent lactale (enfant)',  desc:'Extraction dent temporaire chez enfant. Anesthésie locale. Code B.O.N. D716.',             tarif:40, code:'D716'},
+  'D717': {title:'D717 — Extraction par alvéolectomie',      desc:'3 à 12 extractions par alvéolectomie, anesthésie générale. Code B.O.N. D717.',             tarif:250,code:'D717'},
+  'D720': {title:'D720 — Extraction dents de sagesse',       desc:'Avulsion dents de sagesse incluses ou semi-incluses. Code B.O.N. D720.',                  tarif:200,code:'D720'},
+  'D721': {title:'D721 — Extraction dent de germe',          desc:'Extraction de dent de germe. Radiographie préopératoire obligatoire. Code D721.',          tarif:200,code:'D721'},
+  'D722': {title:'D722 — Extraction dent incluse/enclavée',  desc:'Extraction dent incluse ou enclavée (couronne, branche montante). Code D722.',             tarif:80, code:'D722'},
+  'D724': {title:'D724 — Germectomie',                       desc:'Germectomie pour une canine ou dent de sagesse. Anesthésie locale. Code D724.',            tarif:80, code:'D724'},
+  'D728': {title:'D728 — Extraction dent sous-muqueuse',     desc:'Extraction dent sous-muqueuse ou surnuméraire. Code B.O.N. D728.',                        tarif:60, code:'D728'},
+  'D730': {title:'D730 — Extraction chirurgicale (couronne)',desc:'Extraction chirurgicale dent incluse avec lambeau — couronne ou branche. Code D730.',       tarif:100,code:'D730'},
+  'D731': {title:'D731 — Extraction + branche montante',     desc:'Extraction chirurgicale dent permanente incluse + traitement branche montante. D731.',     tarif:150,code:'D731'},
   // ── CHIRURGIE MAXILLAIRE ──
-  'D733': {title:'D733 — Traitement lésions osseuses',       desc:"Traitement chirurgical lésions osseuses et gingivales. Code B.O.N. D733.",                 tarif:40, code:'D733'},
-  'D734': {title:'D734 — Traitement chirurgical racine',     desc:"Traitement chirurgical racine + couronne gingival. Pour 1 dent. Code D734.",               tarif:40, code:'D734'},
-  'D736': {title:'D736 — Dégagement crête (hémimaxillaire)', desc:"Dégagement chirurgical à la crête hémimaxillaire ou canine. Code B.O.N. D736.",           tarif:150,code:'D736'},
-  'D737': {title:'D737 — Dégagement crête totale',           desc:"Dégagement chirurgical crête totale du maxillaire. Code B.O.N. D737.",                     tarif:300,code:'D737'},
-  'D738': {title:'D738 — Curetage périapical',               desc:"Curetage périapical avec ou sans résection apicale. Radio obligatoire. Code D738.",        tarif:150,code:'D738'},
-  'D740': {title:'D740 — Kyste (petit volume)',               desc:"Exérèse chirurgicale kyste petit volume. Radio (radiovélaire oblique) obligatoire. D740.", tarif:150,code:'D740'},
-  'D741': {title:'D741 — Kyste étendu (apex 2 dents+)',      desc:"Kyste étendu aux apex de 2 dents ou plus. Tréphination si nécessaire. Code D741.",        tarif:300,code:'D741'},
-  'D743': {title:'D743 — Gingivectomie partielle',           desc:"Gingivectomie à un segment important du maxillaire en matière plastique. Code D743.",      tarif:50, code:'D743'},
-  'D744': {title:'D744 — Traitement hémorragie post-op.',    desc:"Traitement hémorragie post-opératoire dans une séance autre. Code B.O.N. D744.",           tarif:40, code:'D744'},
-  'D745': {title:'D745 — Désensibilisation musculaire',      desc:"Désensibilisation musculaire. Code B.O.N. D745.",                                           tarif:60, code:'D745'},
+  'D733': {title:'D733 — Traitement lésions osseuses',       desc:'Traitement chirurgical lésions osseuses et gingivales. Code B.O.N. D733.',                 tarif:40, code:'D733'},
+  'D734': {title:'D734 — Traitement chirurgical racine',     desc:'Traitement chirurgical racine + couronne gingival. Pour 1 dent. Code D734.',               tarif:40, code:'D734'},
+  'D736': {title:'D736 — Dégagement crête (hémimaxillaire)', desc:'Dégagement chirurgical à la crête hémimaxillaire ou canine. Code B.O.N. D736.',           tarif:150,code:'D736'},
+  'D737': {title:'D737 — Dégagement crête totale',           desc:'Dégagement chirurgical crête totale du maxillaire. Code B.O.N. D737.',                     tarif:300,code:'D737'},
+  'D738': {title:'D738 — Curetage périapical',               desc:'Curetage périapical avec ou sans résection apicale. Radio obligatoire. Code D738.',        tarif:150,code:'D738'},
+  'D740': {title:'D740 — Kyste (petit volume)',               desc:'Exérèse chirurgicale kyste petit volume. Radio (radiovélaire oblique) obligatoire. D740.', tarif:150,code:'D740'},
+  'D741': {title:'D741 — Kyste étendu (apex 2 dents+)',      desc:'Kyste étendu aux apex de 2 dents ou plus. Tréphination si nécessaire. Code D741.',        tarif:300,code:'D741'},
+  'D743': {title:'D743 — Gingivectomie partielle',           desc:'Gingivectomie à un segment important du maxillaire en matière plastique. Code D743.',      tarif:50, code:'D743'},
+  'D744': {title:'D744 — Traitement hémorragie post-op.',    desc:'Traitement hémorragie post-opératoire dans une séance autre. Code B.O.N. D744.',           tarif:40, code:'D744'},
+  'D745': {title:'D745 — Désensibilisation musculaire',      desc:'Désensibilisation musculaire. Code B.O.N. D745.',                                           tarif:60, code:'D745'},
   // ── PROTHÈSE FIXE ──
-  'D752': {title:'D752 — Couronne à incrustation vestibulaire',desc:"Couronne à incrustations vestibulaires ou couronnes veneer en or/jaune. Code D752.",    tarif:750,code:'D752'},
-  'D754': {title:'D754 — Couronne CCM (Céramo-métallique)',  desc:"Couronne céramo-métallique classique. Armature métal + céramique. Code B.O.N. D754.",     tarif:1800,code:'D754'},
-  'D755': {title:'D755 — Couronne CCC (Jacket cuite)',       desc:"Couronne jacket cuite — tout céramique (zircone/Emax). Secteur antérieur. Code D755.",     tarif:2500,code:'D755'},
-  'D756': {title:'D756 — Couronne coulée (métal précieux)',  desc:"Couronne coulée en or ou métal précieux. Haute résistance. Code B.O.N. D756.",             tarif:500,code:'D756'},
-  'D759': {title:'D759 — Pivot pluriradiculaire',            desc:"Restauration pivot sur dent pluriradiculaire. Code B.O.N. D759.",                          tarif:1000,code:'D759'},
-  'D760': {title:'D760 — Pivot esthétique (IMAX)',           desc:"Pivot à pivots esthétiques sur dent pluriradiculaire. Code B.O.N. D760.",                  tarif:1500,code:'D760'},
-  'D761': {title:'D761 — Bridge (élément intermédiaire)',    desc:"Bridge — élément intermédiaire. Cotation par élément. Code B.O.N. D761.",                  tarif:500,code:'D761'},
-  'D769': {title:'D769 — Bridge inlay (métal précieux)',     desc:"Bridge inlay en or, jaune ou métal précieux. Code B.O.N. D769.",                           tarif:600,code:'D769'},
+  'D752': {title:'D752 — Couronne à incrustation vestibulaire',desc:'Couronne à incrustations vestibulaires ou couronnes veneer en or/jaune. Code D752.',    tarif:750,code:'D752'},
+  'D754': {title:'D754 — Couronne CCM (Céramo-métallique)',  desc:'Couronne céramo-métallique classique. Armature métal + céramique. Code B.O.N. D754.',     tarif:1800,code:'D754'},
+  'D755': {title:'D755 — Couronne CCC (Jacket cuite)',       desc:'Couronne jacket cuite — tout céramique (zircone/Emax). Secteur antérieur. Code D755.',     tarif:2500,code:'D755'},
+  'D756': {title:'D756 — Couronne coulée (métal précieux)',  desc:'Couronne coulée en or ou métal précieux. Haute résistance. Code B.O.N. D756.',             tarif:500,code:'D756'},
+  'D759': {title:'D759 — Pivot pluriradiculaire',            desc:'Restauration pivot sur dent pluriradiculaire. Code B.O.N. D759.',                          tarif:1000,code:'D759'},
+  'D760': {title:'D760 — Pivot esthétique (IMAX)',           desc:'Pivot à pivots esthétiques sur dent pluriradiculaire. Code B.O.N. D760.',                  tarif:1500,code:'D760'},
+  'D761': {title:'D761 — Bridge (élément intermédiaire)',    desc:'Bridge — élément intermédiaire. Cotation par élément. Code B.O.N. D761.',                  tarif:500,code:'D761'},
+  'D769': {title:'D769 — Bridge inlay (métal précieux)',     desc:'Bridge inlay en or, jaune ou métal précieux. Code B.O.N. D769.',                           tarif:600,code:'D769'},
   // ── PROTHÈSE ADJOINTE ──
-  'D762': {title:'D762 — Prothèse adjointe (3 dents)',       desc:"Appareil/plaque base plastique - jusqu'a 3 dents. Code B.O.N. D762.',                     tarif:400,code:'D762'},
-  'D763': {title:'D763 — Prothèse adjointe (4 dents)',       desc:"Appareil/plaque base plastique — 4 dents. Code B.O.N. D763.",                              tarif:450,code:'D763'},
-  'D764': {title:'D764 — Prothèse adjointe (5 dents)',       desc:"Appareil/plaque base plastique — 5 dents. Code B.O.N. D764.",                              tarif:500,code:'D764'},
-  'D765': {title:'D765 — Prothèse adjointe (6 dents)',       desc:"Appareil/plaque base plastique — 6 dents. Code B.O.N. D765.",                              tarif:550,code:'D765'},
-  'D766': {title:'D766 — Prothèse adjointe (7 dents)',       desc:"Appareil/plaque base plastique — 7 dents. Code B.O.N. D766.",                              tarif:600,code:'D766'},
-  'D767': {title:'D767 — Prothèse adjointe (8 dents)',       desc:"Appareil/plaque base plastique — 8 dents. Code B.O.N. D767.",                              tarif:650,code:'D767'},
-  'D768': {title:'D768 — Prothèse adjointe (9 dents)',       desc:"Appareil/plaque base plastique — 9 dents. Code B.O.N. D768.",                              tarif:700,code:'D768'},
-  'D770': {title:'D770 — Prothèse adjointe (12 dents)',      desc:"Appareil/plaque base plastique — 12 dents. Code B.O.N. D770.",                             tarif:800,code:'D770'},
-  'D771': {title:'D771 — Prothèse adjointe (13 dents)',      desc:"Appareil/plaque base — 13 dents. Code B.O.N. D771.",                                       tarif:850,code:'D771'},
-  'D772': {title:'D772 — Prothèse totale maxillaire sup.',   desc:"Prothèse adjointe totale du maxillaire supérieur. Code B.O.N. D772.",                      tarif:1200,code:'D772'},
-  'D773': {title:'D773 — Prothèse totale maxillaire inf.',   desc:"Prothèse adjointe totale du maxillaire inférieur. Code B.O.N. D773.",                      tarif:1200,code:'D773'},
-  'D774': {title:'D774 — Prothèse totale des 2 maxillaires', desc:"Prothèse adjointe totale des deux maxillaires. Code B.O.N. D774.",                         tarif:2200,code:'D774'},
-  'D776': {title:'D776 — Prothèse contreplaquée',            desc:"Prothèse contreplaquée ou massive sur plaque base métallique. Code D776.",                 tarif:1000,code:'D776'},
-  'D779': {title:'D779 — Réparation plaque base métallique', desc:"Réparation fracture plaque base métallique, non comprise. Code B.O.N. D779.",              tarif:100,code:'D779'},
-  'D780': {title:'D780 — Ajout dent ou crochet',             desc:"Dent ou crochet ajouté/remplacé sur appareil existant. Code B.O.N. D780.",                 tarif:80, code:'D780'},
+  'D762': {title:'D762 — Prothèse adjointe (3 dents)',       desc:"Appareil/plaque base plastique - jusqua 3 dents. Code B.O.N. D762.",                     tarif:400,code:'D762'},
+  'D763': {title:'D763 — Prothèse adjointe (4 dents)',       desc:'Appareil/plaque base plastique — 4 dents. Code B.O.N. D763.',                              tarif:450,code:'D763'},
+  'D764': {title:'D764 — Prothèse adjointe (5 dents)',       desc:'Appareil/plaque base plastique — 5 dents. Code B.O.N. D764.',                              tarif:500,code:'D764'},
+  'D765': {title:'D765 — Prothèse adjointe (6 dents)',       desc:'Appareil/plaque base plastique — 6 dents. Code B.O.N. D765.',                              tarif:550,code:'D765'},
+  'D766': {title:'D766 — Prothèse adjointe (7 dents)',       desc:'Appareil/plaque base plastique — 7 dents. Code B.O.N. D766.',                              tarif:600,code:'D766'},
+  'D767': {title:'D767 — Prothèse adjointe (8 dents)',       desc:'Appareil/plaque base plastique — 8 dents. Code B.O.N. D767.',                              tarif:650,code:'D767'},
+  'D768': {title:'D768 — Prothèse adjointe (9 dents)',       desc:'Appareil/plaque base plastique — 9 dents. Code B.O.N. D768.',                              tarif:700,code:'D768'},
+  'D770': {title:'D770 — Prothèse adjointe (12 dents)',      desc:'Appareil/plaque base plastique — 12 dents. Code B.O.N. D770.',                             tarif:800,code:'D770'},
+  'D771': {title:'D771 — Prothèse adjointe (13 dents)',      desc:'Appareil/plaque base — 13 dents. Code B.O.N. D771.',                                       tarif:850,code:'D771'},
+  'D772': {title:'D772 — Prothèse totale maxillaire sup.',   desc:'Prothèse adjointe totale du maxillaire supérieur. Code B.O.N. D772.',                      tarif:1200,code:'D772'},
+  'D773': {title:'D773 — Prothèse totale maxillaire inf.',   desc:'Prothèse adjointe totale du maxillaire inférieur. Code B.O.N. D773.',                      tarif:1200,code:'D773'},
+  'D774': {title:'D774 — Prothèse totale des 2 maxillaires', desc:'Prothèse adjointe totale des deux maxillaires. Code B.O.N. D774.',                         tarif:2200,code:'D774'},
+  'D776': {title:'D776 — Prothèse contreplaquée',            desc:'Prothèse contreplaquée ou massive sur plaque base métallique. Code D776.',                 tarif:1000,code:'D776'},
+  'D779': {title:'D779 — Réparation plaque base métallique', desc:'Réparation fracture plaque base métallique, non comprise. Code B.O.N. D779.',              tarif:100,code:'D779'},
+  'D780': {title:'D780 — Ajout dent ou crochet',             desc:'Dent ou crochet ajouté/remplacé sur appareil existant. Code B.O.N. D780.',                 tarif:80, code:'D780'},
   // ── IMPLANTOLOGIE ──
-  'implant_pose':  {title:"Pose implant dentaire",         desc:"Implant en titane grade IV. Phase chirurgicale. Cicatrisation osseuse 3-6 mois.",           tarif:4500,code:'IMP'},
-  'implant_ccm':   {title:'Implant + Couronne CCM',          desc:"Vis implantaire + couronne céramo-métallique sur pilier.",                                  tarif:6000,code:'IMP'},
-  'implant_ccc':   {title:'Implant + Couronne CCC (Zircone)',desc:"Vis implantaire + couronne tout céramique zircone. Solution premium.",                      tarif:7000,code:'IMP'},
-  'implant_imax':  {title:'Implant + Couronne IMAX',         desc:"Vis implantaire + couronne céramo-métallique renforcée IMAX.",                             tarif:6500,code:'IMP'},
+  'implant_pose':  {title:"Pose implant dentaire",         desc:'Implant en titane grade IV. Phase chirurgicale. Cicatrisation osseuse 3-6 mois.',           tarif:4500,code:'IMP'},
+  'implant_ccm':   {title:'Implant + Couronne CCM',          desc:'Vis implantaire + couronne céramo-métallique sur pilier.',                                  tarif:6000,code:'IMP'},
+  'implant_ccc':   {title:'Implant + Couronne CCC (Zircone)',desc:'Vis implantaire + couronne tout céramique zircone. Solution premium.',                      tarif:7000,code:'IMP'},
+  'implant_imax':  {title:'Implant + Couronne IMAX',         desc:'Vis implantaire + couronne céramo-métallique renforcée IMAX.',                             tarif:6500,code:'IMP'},
   // ── ORTHODONTIE ──
-  'D620': {title:'D620 — Rééducation déglutition',           desc:"Rééducation de la déglutition, éducation de la parole — par séance (15 séances max). D620.",tarif:50,code:'D620'},
-  'D622': {title:'D622 — Traitement dysharmonies',           desc:"Traitement des dysharmonies dento-faciales. Par séance. Code B.O.N. D622.",                tarif:75, code:'D622'},
-  'D823': {title:'D823 — Traitement orthodontique',          desc:"Traitement orthodontique provisoire — plafond 6 mois. Code B.O.N. D823.",                  tarif:540,code:'D823'},
-  'D831': {title:'D831 — Première séance orthodontie',       desc:"Première séance de traitement orthodontique. Code B.O.N. D831.",                           tarif:75, code:'D831'},
-  'D822': {title:'D822 — Deuxième année orthodontie',        desc:"Deuxième année de traitement orthodontique. Code B.O.N. D822.",                            tarif:75, code:'D822'},
-  'D543': {title:'D543 — Troisième année orthodontie',       desc:"Troisième année de traitement orthodontique. Code B.O.N. D543.",                           tarif:50, code:'D543'},
+  'D620': {title:'D620 — Rééducation déglutition',           desc:'Rééducation de la déglutition, éducation de la parole — par séance (15 séances max). D620.',tarif:50,code:'D620'},
+  'D622': {title:'D622 — Traitement dysharmonies',           desc:'Traitement des dysharmonies dento-faciales. Par séance. Code B.O.N. D622.',                tarif:75, code:'D622'},
+  'D823': {title:'D823 — Traitement orthodontique',          desc:'Traitement orthodontique provisoire — plafond 6 mois. Code B.O.N. D823.',                  tarif:540,code:'D823'},
+  'D831': {title:'D831 — Première séance orthodontie',       desc:'Première séance de traitement orthodontique. Code B.O.N. D831.',                           tarif:75, code:'D831'},
+  'D822': {title:'D822 — Deuxième année orthodontie',        desc:'Deuxième année de traitement orthodontique. Code B.O.N. D822.',                            tarif:75, code:'D822'},
+  'D543': {title:'D543 — Troisième année orthodontie',       desc:'Troisième année de traitement orthodontique. Code B.O.N. D543.',                           tarif:50, code:'D543'},
 };
 const acteClasses = {
   // Obturations → traité (vert)
@@ -953,7 +943,6 @@ function setConnectionStatus(status) {
   const dot = document.getElementById('connDot');
   const lbl = document.getElementById('connLabel');
   const role = document.getElementById('syncStatus');
-  if(!dot || !lbl) return;
   if(status === 'online') {
     dot.className = 'dot green'; lbl.textContent = 'Synchronisé'; role.textContent = '🟢 En ligne';
   } else if(status === 'demo') {
@@ -1607,12 +1596,12 @@ function resetActeForm(){
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
 const pageInfo={
-  dashboard:{title:'Tableau de bord',sub:'Vue ensemble du cabinet'},
+  dashboard:{title:'Tableau de bord',sub:'Vue d\'ensemble du cabinet'},
   agenda:{title:'Agenda',sub:'Gestion des rendez-vous'},
   patients:{title:'Patients',sub:'Dossiers patients'},
   soins:{title:'Soins & Traitements',sub:'Schéma dentaire & actes'},
   facturation:{title:'Facturation',sub:'Factures et paiements'},
-  stats:{title:'Statistiques',sub:'Analyse activite'}
+  stats:{title:'Statistiques',sub:'Analyse de l\'activité'}
 };
 function switchPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
