@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cabinet Dr. Elghazi Elhoussaini</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- ══════════ FIREBASE SDK ══════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getDatabase, ref, push, set, onValue, remove, update, goOnline }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  🔴 ÉTAPE 1 — Remplacez ces valeurs par vos propres clés Firebase   ║
+// ║  Guide complet en bas de page (section SETUP)                        ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+const firebaseConfig = {
+  apiKey:            "AIzaSyCdqRh_vut_cPSMQHJY0Dn_MrhxDhD7pHs",
+  authDomain:        "cabinet-elghazi.firebaseapp.com",
+  databaseURL:       "https://cabinet-elghazi-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "cabinet-elghazi",
+  storageBucket:     "cabinet-elghazi.firebasestorage.app",
+  messagingSenderId: "607312876530",
+  appId:             "1:607312876530:web:abe1488dcea952c229516b"
+};
+
+// Init Firebase
+let app, db;
+let firebaseReady = false;
+try {
+  app = initializeApp(firebaseConfig);
+  db  = getDatabase(app);
+  // Test connection
+  if (firebaseConfig.apiKey.length > 10) {
+    firebaseReady = true;
+    window._db = db;
+    window._ref = ref;
+    window._push = push;
+    window._set = set;
+    window._onValue = onValue;
+    window._remove = remove;
+    window._update = update;
+    window._goOnline = goOnline;
+    window.firebaseReady = true;
+    goOnline(db);
+    console.log("✅ Firebase connecté");
+  } else {
+    console.warn("⚠️ Firebase non configuré — mode démo local");
+    window.firebaseReady = false;
+  }
+} catch(e) {
+  console.warn("Firebase init error:", e);
+  window.firebaseReady = false;
+}
+</script>
+
+<style>
+:root {
+  --navy:#0B1F3A; --navy-mid:#152B4E; --navy-light:#1E3A63;
+  --gold:#C9A84C; --gold-light:#E4C97E;
+  --cream:#F8F4ED; --white:#FFFFFF;
+  --text-main:#0B1F3A; --text-soft:#5A6E85; --border:#DDE4EE;
+  --green:#2ECC71; --red:#E74C3C; --orange:#F39C12;
+  --sidebar-w:240px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-main);min-height:100vh;overflow-x:hidden;}
+
+/* ── SYNC STATUS BAR ── */
+#syncBar{
+  position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;
+  background:linear-gradient(90deg,var(--gold),var(--green),var(--gold));
+  background-size:200% 100%;animation:syncAnim 1.5s linear infinite;
+  display:none;
+}
+#syncBar.active{display:block;}
+@keyframes syncAnim{0%{background-position:0%}100%{background-position:200%}}
+
+#connectionDot{
+  position:fixed;bottom:18px;right:18px;z-index:999;
+  display:flex;align-items:center;gap:7px;
+  background:var(--white);border:1px solid var(--border);
+  border-radius:20px;padding:6px 12px;font-size:11.5px;font-weight:600;
+  box-shadow:0 2px 12px rgba(0,0,0,0.08);
+}
+.dot{width:8px;height:8px;border-radius:50%;}
+.dot.green{background:var(--green);box-shadow:0 0 0 3px rgba(46,204,113,0.2);animation:pulse 2s infinite;}
+.dot.red{background:var(--red);}
+.dot.orange{background:var(--orange);}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;left:0;top:0;width:var(--sidebar-w);height:100vh;background:var(--navy);display:flex;flex-direction:column;box-shadow:4px 0 24px rgba(11,31,58,0.18);z-index:100;}
+.sidebar-logo{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.logo-icon{font-size:28px;margin-bottom:6px;}
+.logo-title{font-family:'Playfair Display',serif;color:var(--gold);font-size:13.5px;font-weight:700;line-height:1.3;}
+.logo-sub{color:rgba(255,255,255,0.45);font-size:10.5px;margin-top:2px;letter-spacing:0.5px;}
+.nav{flex:1;padding:16px 0;overflow-y:auto;}
+.nav-section{padding:8px 16px 4px;color:rgba(255,255,255,0.3);font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,0.65);cursor:pointer;font-size:13.5px;font-weight:400;border-left:3px solid transparent;transition:all 0.18s ease;margin:1px 0;}
+.nav-item:hover{background:rgba(255,255,255,0.06);color:var(--white);}
+.nav-item.active{background:rgba(201,168,76,0.12);color:var(--gold-light);border-left-color:var(--gold);font-weight:600;}
+.nav-item .icon{width:18px;text-align:center;font-size:15px;}
+.badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--navy);font-size:13px;}
+.user-info .name{color:var(--white);font-size:12.5px;font-weight:600;}
+.user-info .role{color:rgba(255,255,255,0.4);font-size:10.5px;}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--white);padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.page-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);}
+.page-sub{font-size:12px;color:var(--text-soft);margin-top:1px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.btn{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-primary{background:var(--navy);color:var(--white);}
+.btn-primary:hover{background:var(--navy-light);}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-gold:hover{background:var(--gold-light);}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text-main);}
+.btn-outline:hover{border-color:var(--navy);}
+.btn-danger{background:var(--red);color:white;}
+.date-badge{background:var(--cream);padding:6px 14px;border-radius:8px;font-size:12.5px;color:var(--text-soft);border:1px solid var(--border);}
+.content{padding:28px;flex:1;}
+
+/* ── CARDS / GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--white);border-radius:12px;padding:20px;border:1px solid var(--border);position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 12px 0 60px;}
+.stat-card.navy::before{background:rgba(11,31,58,0.06);}
+.stat-card.gold::before{background:rgba(201,168,76,0.12);}
+.stat-card.green::before{background:rgba(46,204,113,0.1);}
+.stat-card.orange::before{background:rgba(243,156,18,0.1);}
+.stat-label{font-size:12px;color:var(--text-soft);font-weight:500;}
+.stat-value{font-size:28px;font-weight:700;margin:6px 0 4px;font-family:'Playfair Display',serif;}
+.stat-card.navy .stat-value{color:var(--navy);}
+.stat-card.gold .stat-value{color:var(--gold);}
+.stat-card.green .stat-value{color:var(--green);}
+.stat-card.orange .stat-value{color:var(--orange);}
+.stat-change{font-size:11.5px;color:var(--text-soft);}
+.stat-icon{position:absolute;top:18px;right:18px;font-size:22px;opacity:0.4;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+.card{background:var(--white);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-weight:700;font-size:14.5px;}
+.card-body{padding:16px 20px;}
+
+/* ── AGENDA ── */
+.appt-slot{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;margin-bottom:6px;}
+.appt-slot:hover{border-color:var(--navy);background:rgba(11,31,58,0.02);}
+.appt-time{font-size:12px;font-weight:700;color:var(--text-soft);min-width:44px;}
+.appt-info{flex:1;}
+.appt-name{font-size:13.5px;font-weight:600;}
+.appt-type{font-size:11.5px;color:var(--text-soft);}
+.appt-status{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.status-done{background:rgba(46,204,113,0.12);color:#27ae60;}
+.status-waiting{background:rgba(243,156,18,0.12);color:#e67e22;}
+.status-upcoming{background:rgba(11,31,58,0.08);color:var(--navy);}
+.status-cancelled{background:rgba(231,76,60,0.1);color:var(--red);}
+
+/* ── PATIENTS TABLE ── */
+.table{width:100%;border-collapse:collapse;}
+.table th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-soft);padding:10px 14px;background:var(--cream);border-bottom:1px solid var(--border);}
+.table td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.table tr:last-child td{border-bottom:none;}
+.table tr:hover td{background:rgba(11,31,58,0.02);}
+.patient-name{font-weight:600;}
+.patient-id{font-size:11px;color:var(--text-soft);}
+.tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;}
+.tag-blue{background:rgba(11,31,58,0.08);color:var(--navy);}
+.tag-gold{background:rgba(201,168,76,0.15);color:#a07a20;}
+.tag-green{background:rgba(46,204,113,0.12);color:#27ae60;}
+.search-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);margin-bottom:16px;}
+.search-bar input{border:none;outline:none;font-size:13.5px;flex:1;font-family:'DM Sans',sans-serif;}
+
+/* ── DENTAL CHART ── */
+.dental-chart{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 0;}
+.tooth{width:30px;height:34px;border-radius:4px 4px 6px 6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--text-soft);cursor:pointer;transition:all 0.2s;background:var(--white);position:relative;}
+.tooth:hover{border-color:var(--navy);transform:translateY(-2px);}
+.tooth.treated{background:#d4f5e4;border-color:#2ECC71;color:#27ae60;}
+.tooth.crown{background:#fff3d6;border-color:var(--gold);color:#a07a20;}
+.tooth.extraction{background:#fde8e8;border-color:var(--red);color:var(--red);}
+.tooth.cavity{background:#fef3cd;border-color:var(--orange);color:var(--orange);}
+.tooth.implant{background:#e8f0fe;border-color:#4285f4;color:#1a56db;}
+.tooth.canal{background:#f3e8ff;border-color:#9333ea;color:#7e22ce;}
+.jaw-label{font-size:10px;color:var(--text-soft);font-weight:600;margin:4px 0 2px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-soft);}
+.legend-dot{width:10px;height:10px;border-radius:3px;}
+
+/* ── FORMS / MODALS ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:12px;font-weight:600;color:var(--text-soft);}
+.form-group input,.form-group select,.form-group textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--cream);transition:border 0.2s;color:var(--text-main);outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--navy);background:var(--white);}
+.modal-overlay{position:fixed;inset:0;background:rgba(11,31,58,0.45);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:16px;width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(11,31,58,0.2);}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-soft);}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+
+/* ── PAGES ── */
+.page{display:none;animation:fadeIn 0.3s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--white);padding:4px;border-radius:10px;border:1px solid var(--border);width:fit-content;}
+.tab{padding:7px 18px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-soft);transition:all 0.2s;}
+.tab.active{background:var(--navy);color:var(--white);font-weight:600;}
+
+/* ── MISC ── */
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.text-soft{color:var(--text-soft);font-size:12px;}
+#toothBtnsWrap{max-height:200px;overflow-y:auto;padding-right:4px;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px;}
+.invoice-item{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--white);margin-bottom:8px;}
+.empty-row{text-align:center;padding:30px;color:var(--text-soft);font-size:13px;}
+
+
+#setupCard, .setup-box, .setup-body, .setup-header { display:none !important; }
+</style>
+</head>
+<body>
+
+<!-- SYNC BAR -->
+<div id="syncBar"></div>
+
+<!-- CONNECTION DOT -->
+<div id="connectionDot">
+  <div class="dot orange" id="connDot"></div>
+  <span id="connLabel">Connexion...</span>
+</div>
+</div>
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🦷</div>
+    <div class="logo-title">Dr. Elghazi<br>Elhoussaini</div>
+    <div class="logo-sub">Chirurgie Dentaire</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="switchPage('dashboard',this)"><span class="icon">📊</span> Tableau de bord</div>
+    <div class="nav-item" onclick="switchPage('agenda',this)"><span class="icon">📅</span> Agenda<span class="badge" id="badgeAppt">0</span></div>
+    <div class="nav-section">Clinique</div>
+    <div class="nav-item" onclick="switchPage('patients',this)"><span class="icon">👥</span> Patients</div>
+    <div class="nav-item" onclick="switchPage('soins',this)"><span class="icon">🦷</span> Soins & Traitements</div>
+    <div class="nav-item" onclick="switchPage('facturation',this)"><span class="icon">💰</span> Facturation</div>
+    <div class="nav-section">Système</div>
+    <div class="nav-item" onclick="switchPage('stats',this)"><span class="icon">📈</span> Statistiques</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="avatar">DE</div>
+    <div class="user-info">
+      <div class="name">Dr. Elghazi</div>
+      <div class="role" id="syncStatus">Mode démo</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Tableau de bord</div>
+      <div class="page-sub" id="pageSub">Bienvenue, Dr. Elghazi</div>
+    </div>
+    <div class="topbar-right">
+      <div class="date-badge" id="todayBadge">📅 ...</div>
+      <button class="btn btn-gold" onclick="openModal('addPatient')">+ Nouveau patient</button>
+      <button class="btn btn-primary" onclick="openModal('addAppt')">+ Rendez-vous</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card navy"><div class="stat-icon">👥</div><div class="stat-label">Patients total</div><div class="stat-value" id="statPatients">0</div><div class="stat-change" id="statPatientsChange">chargement...</div></div>
+        <div class="stat-card gold"><div class="stat-icon">📅</div><div class="stat-label">RDV aujourd'hui</div><div class="stat-value" id="statApptToday">0</div><div class="stat-change" id="statApptChange">chargement...</div></div>
+        <div class="stat-card green"><div class="stat-icon">💰</div><div class="stat-label">CA ce mois (MAD)</div><div class="stat-value" id="statCA">0</div><div class="stat-change">total des actes payés</div></div>
+        <div class="stat-card orange"><div class="stat-icon">⏳</div><div class="stat-label">Reste à encaisser</div><div class="stat-value" id="statReste">0</div><div class="stat-change">MAD impayés</div></div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-header"><span class="card-title">📅 RDV du jour</span></div>
+          <div class="card-body" id="dashApptList"><div class="empty-row">Aucun rendez-vous aujourd'hui</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">📋 Derniers actes</span></div>
+            <div class="card-body" id="dashActesList"><div class="empty-row">Aucun acte récent</div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">🔄 Activité temps réel</span></div>
+            <div class="card-body" id="activityFeed" style="max-height:180px;overflow-y:auto">
+              <div class="empty-row">En attente de modifications...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AGENDA ══ -->
+    <div class="page" id="page-agenda">
+      <div class="flex-between" style="margin-bottom:16px">
+        <div style="display:flex;gap:8px">
+          <input type="date" id="agendaDate" onchange="loadAgenda()" style="padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--white);outline:none">
+          <button class="btn btn-outline" onclick="document.getElementById('agendaDate').valueAsDate=new Date();loadAgenda()">Aujourd'hui</button>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('addAppt')">+ Ajouter RDV</button>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title" id="agendaDayTitle">📅 Rendez-vous</span></div>
+        <div class="card-body" id="agendaList"><div class="empty-row">Aucun rendez-vous ce jour</div></div>
+      </div>
+    </div>
+
+    <!-- ══ PATIENTS ══ -->
+    <div class="page" id="page-patients">
+      <div class="flex-between" style="margin-bottom:16px">
+        <div class="search-bar" style="width:320px;margin-bottom:0"><span>🔍</span><input type="text" id="searchPatient" placeholder="Rechercher un patient..." oninput="filterPatients()"></div>
+        <button class="btn btn-gold" onclick="openModal('addPatient')">+ Nouveau patient</button>
+      </div>
+      <div class="card">
+        <table class="table">
+          <thead><tr><th>Patient</th><th>Téléphone</th><th>Âge</th><th>Dernière visite</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="patientsTableBody"><tr><td colspan="6" class="empty-row">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ SOINS ══ -->
+    <div class="page" id="page-soins">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;background:var(--white);padding:12px 18px;border-radius:10px;border:1px solid var(--border)">
+        <span style="font-size:13px;font-weight:600;color:var(--text-soft)">Patient :</span>
+        <select id="soinsPatientSelect" onchange="loadPatientChart()" style="border:1.5px solid var(--border);border-radius:7px;padding:6px 12px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--cream);outline:none">
+          <option value="">— Sélectionner un patient —</option>
+        </select>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--text-soft);font-weight:600">Nomenclature :</span>
+          <div style="display:flex;background:var(--cream);border-radius:8px;border:1px solid var(--border);overflow:hidden">
+            <button id="btnPerm" onclick="setNomenclature('permanente')" style="padding:6px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--navy);color:white">Permanente</button>
+            <button id="btnTemp" onclick="setNomenclature('temporaire')" style="padding:6px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--text-soft)">Temporaire</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <span class="card-title" id="schemaTitle">🦷 Schéma dentaire</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="resetTeeth()">🔄 Réinitialiser</button>
+            <button class="btn btn-gold" style="font-size:12px;padding:5px 12px" onclick="openModal('addActe')">+ Ajouter un acte</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:20px">
+          <!-- Schéma permanent -->
+          <div id="schemaPermanente">
+            <div class="dental-chart">
+              <div class="jaw-label" style="font-size:11px;font-weight:700;color:var(--navy)">▲ MAXILLAIRE SUPÉRIEUR</div>
+              <div style="display:flex;align-items:flex-end;gap:2px;margin:4px 0">
+                <div style="display:flex;gap:2px" id="rowQ1"></div>
+                <div style="width:2px;height:38px;background:var(--border);margin:0 4px;border-radius:1px"></div>
+                <div style="display:flex;gap:2px" id="rowQ2"></div>
+              </div>
+              <div style="display:flex;width:100%;justify-content:space-around;margin-bottom:2px">
+                <span style="font-size:9px;color:var(--text-soft)">Q1 (Droit)</span>
+                <span style="font-size:9px;color:var(--text-soft)">Q2 (Gauche)</span>
+              </div>
+              <div style="width:100%;border-top:1px dashed var(--border);margin:6px 0"></div>
+              <div style="display:flex;width:100%;justify-content:space-around;margin-top:2px">
+                <span style="font-size:9px;color:var(--text-soft)">Q4 (Droit)</span>
+                <span style="font-size:9px;color:var(--text-soft)">Q3 (Gauche)</span>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:2px;margin:4px 0">
+                <div style="display:flex;gap:2px" id="rowQ4"></div>
+                <div style="width:2px;height:38px;background:var(--border);margin:0 4px;border-radius:1px"></div>
+                <div style="display:flex;gap:2px" id="rowQ3"></div>
+              </div>
+              <div class="jaw-label" style="font-size:11px;font-weight:700;color:var(--navy)">▼ MANDIBULE INFÉRIEURE</div>
+            </div>
+          </div>
+          <!-- Schéma temporaire -->
+          <div id="schemaTemporaire" style="display:none">
+            <div class="dental-chart">
+              <div class="jaw-label" style="font-size:11px;font-weight:700;color:#2c6ea8">▲ MAXILLAIRE SUPÉRIEUR — Temporaire</div>
+              <div style="display:flex;align-items:flex-end;gap:2px;margin:4px 0">
+                <div style="display:flex;gap:2px" id="rowQ5"></div>
+                <div style="width:2px;height:38px;background:var(--border);margin:0 4px;border-radius:1px"></div>
+                <div style="display:flex;gap:2px" id="rowQ6"></div>
+              </div>
+              <div style="display:flex;width:100%;justify-content:space-around;margin-bottom:2px">
+                <span style="font-size:9px;color:var(--text-soft)">Q5 (Droit)</span>
+                <span style="font-size:9px;color:var(--text-soft)">Q6 (Gauche)</span>
+              </div>
+              <div style="width:100%;border-top:1px dashed var(--border);margin:6px 0"></div>
+              <div style="display:flex;width:100%;justify-content:space-around;margin-top:2px">
+                <span style="font-size:9px;color:var(--text-soft)">Q8 (Droit)</span>
+                <span style="font-size:9px;color:var(--text-soft)">Q7 (Gauche)</span>
+              </div>
+              <div style="display:flex;align-items:flex-start;gap:2px;margin:4px 0">
+                <div style="display:flex;gap:2px" id="rowQ8"></div>
+                <div style="width:2px;height:38px;background:var(--border);margin:0 4px;border-radius:1px"></div>
+                <div style="display:flex;gap:2px" id="rowQ7"></div>
+              </div>
+              <div class="jaw-label" style="font-size:11px;font-weight:700;color:#2c6ea8">▼ MANDIBULE INFÉRIEURE — Temporaire</div>
+            </div>
+          </div>
+          <!-- Légende -->
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);justify-content:center">
+            <div class="legend-item"><div class="legend-dot" style="background:#d4f5e4;border:1.5px solid #2ECC71"></div>Obturation</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fff3d6;border:1.5px solid var(--gold)"></div>Couronne CCM/CCC/IMAX</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fde8e8;border:1.5px solid var(--red)"></div>Extraction</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fef3cd;border:1.5px solid var(--orange)"></div>Carie</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e8f0fe;border:1.5px solid #4285f4"></div>Implant</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f3e8ff;border:1.5px solid #9333ea"></div>Tc / Retraitement</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">📋 Historique des actes</span></div>
+          <div class="card-body" style="padding:0">
+            <table class="table">
+              <thead><tr><th>Date</th><th>Acte</th><th>Dent</th><th>Montant</th></tr></thead>
+              <tbody id="histActesBody"><tr><td colspan="4" class="empty-row">Sélectionnez un patient</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">📝 Plan de traitement</span></div>
+          <div class="card-body" id="planBody"><div class="empty-row">Sélectionnez un patient</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FACTURATION ══ -->
+    <div class="page" id="page-facturation">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+        <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-label">Payées ce mois</div><div class="stat-value" id="facPayees" style="font-size:22px">0</div><div class="stat-change">MAD</div></div>
+        <div class="stat-card orange"><div class="stat-icon">⏳</div><div class="stat-label">En attente</div><div class="stat-value" id="facAttente" style="font-size:22px">0</div><div class="stat-change">MAD</div></div>
+        <div class="stat-card navy"><div class="stat-icon">📊</div><div class="stat-label">Total émis ce mois</div><div class="stat-value" id="facTotal" style="font-size:22px">0</div><div class="stat-change">MAD</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">💰 Toutes les factures</span></div>
+        <div class="card-body" id="facturationList"><div class="empty-row">Aucune facture enregistrée</div></div>
+      </div>
+    </div>
+
+    <!-- ══ STATS ══ -->
+    <div class="page" id="page-stats">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">🦷 Actes les plus fréquents</span></div>
+          <div class="card-body" id="statsActes"><div class="empty-row">Aucune donnée</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">💳 Modes de paiement</span></div>
+          <div class="card-body" id="statsModes"><div class="empty-row">Aucune donnée</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ══════════ MODAL : Nouveau Patient ══════════ -->
+<div class="modal-overlay" id="modal-addPatient">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">👤 Nouveau patient</div><button class="modal-close" onclick="closeModal('addPatient')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Prénom *</label><input id="pat_prenom" placeholder="Fatima Zahra" /></div>
+        <div class="form-group"><label>Nom *</label><input id="pat_nom" placeholder="Bennani" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Date de naissance</label><input type="date" id="pat_dob" /></div>
+        <div class="form-group"><label>Sexe</label><select id="pat_sexe"><option>Féminin</option><option>Masculin</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Téléphone</label><input id="pat_tel" placeholder="06 61 23 45 67" /></div>
+        <div class="form-group"><label>Email</label><input id="pat_email" placeholder="patient@email.com" /></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px"><label>Adresse</label><input id="pat_adresse" placeholder="Adresse complète" /></div>
+      <div class="form-group"><label>Antécédents / Remarques</label><textarea id="pat_notes" rows="2" placeholder="Allergies, maladies chroniques..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addPatient')">Annuler</button>
+      <button class="btn btn-gold" onclick="savePatient()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL : Rendez-vous ══════════ -->
+<div class="modal-overlay" id="modal-addAppt">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📅 Nouveau rendez-vous</div><button class="modal-close" onclick="closeModal('addAppt')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>Patient *</label><select id="appt_patient" style="width:100%"><option value="">— Sélectionner —</option></select></div>
+        <div class="form-group"><label>Type d'acte *</label>
+          <select id="appt_acte">
+            <option>Consultation</option><option>Détartrage</option><option>Obturation composite</option>
+            <option>Extraction</option><option>Traitement canalaire</option><option>Couronne CCM</option>
+            <option>Couronne CCC</option><option>Couronne IMAX</option><option>Implant</option>
+            <option>Radio rétro-alvéolaire</option><option>Radio panoramique</option><option>Orthodontie</option><option>Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Date *</label><input type="date" id="appt_date" /></div>
+        <div class="form-group"><label>Heure *</label><input type="time" id="appt_heure" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Durée</label><select id="appt_duree"><option>30 min</option><option>45 min</option><option>1h</option><option>1h30</option><option>2h</option></select></div>
+        <div class="form-group"><label>Statut</label><select id="appt_statut"><option value="upcoming">À venir</option><option value="waiting">En salle</option><option value="done">Terminé</option><option value="cancelled">Annulé</option></select></div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="appt_notes" rows="2" placeholder="Instructions particulières..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addAppt')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveAppt()">✅ Confirmer le RDV</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL : Acte dentaire ══════════ -->
+<div class="modal-overlay" id="modal-addActe">
+  <div class="modal" style="width:580px">
+    <div class="modal-header"><div class="modal-title">🦷 Nouvel acte dentaire</div><button class="modal-close" onclick="closeModal('addActe')">✕</button></div>
+    <div class="modal-body">
+
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Nomenclature</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button id="acteNomPerm" onclick="setActeNom('permanente')" style="flex:1;padding:8px;border-radius:7px;border:1.5px solid var(--navy);background:var(--navy);color:white;font-size:12px;font-weight:700;cursor:pointer">🦷 Permanente (11–48)</button>
+          <button id="acteNomTemp" onclick="setActeNom('temporaire')" style="flex:1;padding:8px;border-radius:7px;border:1.5px solid var(--border);background:transparent;color:var(--text-soft);font-size:12px;font-weight:700;cursor:pointer">🔵 Temporaire (51–85)</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Numéro de dent <span id="nomTypeLabel" style="color:var(--gold);font-weight:700">(Permanente FDI)</span></label>
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap" id="toothBtnsWrap"></div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--text-soft)">Sélectionnée :</span>
+          <span id="selectedToothDisplay" style="font-size:14px;font-weight:700;color:var(--navy);background:var(--cream);padding:4px 14px;border-radius:20px;border:1.5px solid var(--navy)">—</span>
+          <span style="font-size:11px;color:var(--text-soft)" id="toothNameDisplay"></span>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button onclick="setMultiTooth()" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--cream);cursor:pointer;color:var(--text-soft)">Plusieurs dents</button>
+          <button onclick="setNoTooth()" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--cream);cursor:pointer;color:var(--text-soft)">Sans dent spécifique</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px">
+        <label>Type d'acte *</label>
+        <select id="acteTypeSelect" onchange="updateActeSubtype()" style="margin-top:6px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;background:var(--cream);outline:none;width:100%">
+          <option value="">— Choisir un acte (Code B.O.N.) —</option>
+          <optgroup label="📡 Radiodiagnostic">
+            <option value="T156">T156 — 1er cliché rétro-alvéolaire</option>
+            <option value="T157">T157 — 2ème cliché rétro-alvéolaire</option>
+            <option value="T158">T158 — Bilan complet rétro-alvéolaire</option>
+            <option value="T169">T169 — Examen radiographique numérique</option>
+          </optgroup>
+          <optgroup label="🟢 Soins conservateurs — Obturations">
+            <option value="D700">D700 — Obturation définitive 1 face</option>
+            <option value="D700_2">D700 — Obturation définitive 2 faces</option>
+            <option value="D701">D701 — Obturation composite (cavité composée)</option>
+            <option value="D707">D707 — Hygiène bucco-dentaire + soins parodontaux</option>
+            <option value="D708">D708 — Détartrage complet (2 séances max)</option>
+            <option value="D710">D710 — Scellement prophylactique des puits/fissures</option>
+          </optgroup>
+          <optgroup label="🟣 Endodontie — Traitement canalaire">
+            <option value="D702">D702 — Pulpotomie + soins coronaires (traitement global)</option>
+            <option value="D703">D703 — Pulpectomie + soins canalaires monoradiculaire</option>
+            <option value="D704">D704 — Pulpectomie + soins canalaires pluriradiculaire</option>
+            <option value="D705_mol">D705 — Groupe molaire (traitement global)</option>
+            <option value="D705_prem">D705 — Groupe prémolaire (traitement global)</option>
+            <option value="DTR_D48">DTR D48 — Retraitement canalaire monoradiculaire</option>
+            <option value="DTR_D24">DTR D24 — Retraitement canalaire pluriradiculaire</option>
+          </optgroup>
+          <optgroup label="🔴 Soins chirurgicaux — Extractions">
+            <option value="D713">D713 — Extraction dent permanente (1 dent)</option>
+            <option value="D714">D714 — Extraction de 2 dents permanentes</option>
+            <option value="D716">D716 — Extraction dent lactale (enfant)</option>
+            <option value="D717">D717 — Extraction dent par alvéolectomie</option>
+            <option value="D720">D720 — Extraction dents de sagesse / incluses</option>
+            <option value="D721">D721 — Extraction dent de germe</option>
+            <option value="D722">D722 — Extraction 1 dent incluse/enclavée</option>
+            <option value="D724">D724 — Germectomie</option>
+            <option value="D728">D728 — Extraction dent sous-muqueuse</option>
+            <option value="D730">D730 — Extraction chirurgicale dent incluse (couronne)</option>
+            <option value="D731">D731 — Extraction chirurgicale + branche montante</option>
+          </optgroup>
+          <optgroup label="🔵 Chirurgie maxillaire">
+            <option value="D733">D733 — Traitement lésions osseuses/gingivales</option>
+            <option value="D734">D734 — Traitement chirurgical racine + couronne gingival</option>
+            <option value="D736">D736 — Dégagement crête hémimaxillaire / canine</option>
+            <option value="D737">D737 — Dégagement crête totale maxillaire</option>
+            <option value="D738">D738 — Curetage périapical</option>
+            <option value="D740">D740 — Kyste petit volume (radio obligatoire)</option>
+            <option value="D741">D741 — Kyste étendu apex 2 dents+</option>
+            <option value="D743">D743 — Gingivectomie partielle</option>
+            <option value="D744">D744 — Traitement hémorragie post-opératoire</option>
+            <option value="D745">D745 — Désensibilisation musculaire</option>
+          </optgroup>
+          <optgroup label="🟠 Prothèse fixe — Couronnes">
+            <option value="D752">D752 — Couronne à incrustation vestibulaire (métal précieux)</option>
+            <option value="D754">D754 — Couronne céramo-métallique (CCM)</option>
+            <option value="D755">D755 — Couronne jacket cuite (CCC)</option>
+            <option value="D756">D756 — Couronne coulée (métal précieux)</option>
+            <option value="D759">D759 — Pivot sur dent pluriradiculaire</option>
+            <option value="D760">D760 — ID + pivot à pivots esthétiques</option>
+            <option value="D761">D761 — Bridge (élément intermédiaire)</option>
+            <option value="D769">D769 — Bridge inlay (or/jaune/métal précieux)</option>
+          </optgroup>
+          <optgroup label="🦷 Prothèse adjointe">
+            <option value="D762">D762 — Appareil (plaque base plastique) — 3 dents</option>
+            <option value="D763">D763 — Plaque base 4 dents</option>
+            <option value="D764">D764 — Plaque base 5 dents</option>
+            <option value="D765">D765 — Plaque base 6 dents</option>
+            <option value="D766">D766 — Plaque base 7 dents</option>
+            <option value="D767">D767 — Plaque base 8 dents</option>
+            <option value="D768">D768 — Plaque base 9 dents</option>
+            <option value="D770">D770 — Plaque base 12 dents</option>
+            <option value="D771">D771 — Plaque base 13 dents</option>
+            <option value="D772">D772 — Prothèse adjointe totale maxillaire supérieur</option>
+            <option value="D773">D773 — Prothèse adjointe totale maxillaire inférieur</option>
+            <option value="D774">D774 — Prothèse adjointe totale des 2 maxillaires</option>
+            <option value="D776">D776 — Prothèse contreplaquée sur plaque base métallique</option>
+            <option value="D779">D779 — Réparation plaque base métallique</option>
+            <option value="D780">D780 — Dent ou crochet ajouté / remplacé</option>
+          </optgroup>
+          <optgroup label="🦴 Implantologie">
+            <option value="implant_pose">Pose d\'implant dentaire</option>
+            <option value="implant_ccm">Implant + Couronne CCM</option>
+            <option value="implant_ccc">Implant + Couronne CCC (Zircone)</option>
+            <option value="implant_imax">Implant + Couronne IMAX</option>
+          </optgroup>
+          <optgroup label="📐 Orthodontie">
+            <option value="D620">D620 — Rééducation déglutition / rééducation parole</option>
+            <option value="D622">D622 — Traitement dysharmonies (par séance)</option>
+            <option value="D823">D823 — Traitement orthodontique (avec plafond 6 mois)</option>
+            <option value="D831">D831 — Première séance orthodontie</option>
+            <option value="D822">D822 — Deuxième année orthodontie</option>
+            <option value="D543">D543 — Troisième année orthodontie</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div id="acteInfoPanel" style="display:none;background:#f0f7ff;border:1px solid #c3daf9;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#1a4a7a">
+        <strong id="acteInfoTitle"></strong><br><span id="acteInfoDesc"></span>
+      </div>
+
+      <!-- FACTURATION -->
+      <div style="background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px">💰 Facturation</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-group">
+            <label>Tarif de base (MAD) <span id="tarifSuggeré" style="color:var(--text-soft);font-weight:400;font-size:10px"></span></label>
+            <input type="number" id="acteTarifBase" placeholder="0" min="0" oninput="recalcTotal()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;color:var(--navy);background:white;outline:none;width:100%;font-family:'DM Sans',sans-serif;margin-top:4px"/>
+          </div>
+          <div class="form-group">
+            <label>Remise</label>
+            <div style="display:flex;gap:6px;margin-top:4px">
+              <input type="number" id="acteRemise" placeholder="0" min="0" oninput="recalcTotal()" style="padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:white;outline:none;width:100%;font-family:'DM Sans',sans-serif"/>
+              <select id="acteRemiseType" onchange="recalcTotal()" style="padding:9px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;background:white;outline:none;font-family:'DM Sans',sans-serif"><option value="mad">MAD</option><option value="pct">%</option></select>
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-group">
+            <label>Acompte versé (MAD)</label>
+            <input type="number" id="acteAcompte" placeholder="0" min="0" oninput="recalcTotal()" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:white;outline:none;width:100%;margin-top:4px;font-family:'DM Sans',sans-serif"/>
+          </div>
+          <div class="form-group">
+            <label>Mode de paiement</label>
+            <select id="acteModePaiement" style="padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:white;outline:none;width:100%;margin-top:4px;font-family:'DM Sans',sans-serif">
+              <option value="especes">💵 Espèces</option><option value="cheque">📋 Chèque</option>
+              <option value="virement">🏦 Virement</option><option value="carte">💳 Carte</option>
+              <option value="cnops">🏥 CNOPS</option><option value="cnss">🏥 CNSS</option>
+              <option value="echeance">📅 Échelonné</option>
+            </select>
+          </div>
+        </div>
+        <div id="tarifRecap" style="background:white;border-radius:8px;border:1px solid var(--border);padding:12px 14px;font-size:12.5px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--text-soft)">Tarif de base</span><span id="recapBase" style="font-weight:600">0 MAD</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--text-soft)">Remise</span><span id="recapRemise" style="color:var(--red);font-weight:600">− 0 MAD</span></div>
+          <div style="height:1px;background:var(--border);margin:6px 0"></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-weight:700;color:var(--navy)">Total net</span><span id="recapTotal" style="font-weight:800;font-size:15px;color:var(--navy)">0 MAD</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--text-soft)">Acompte versé</span><span id="recapAcompte" style="color:var(--green);font-weight:600">− 0 MAD</span></div>
+          <div style="height:1px;background:var(--border);margin:6px 0"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;font-size:13px">Reste à payer</span><span id="recapReste" style="font-weight:800;font-size:16px;color:var(--gold)">0 MAD</span></div>
+        </div>
+        <div style="margin-top:10px">
+          <label style="font-size:12px;font-weight:600;color:var(--text-soft);display:block;margin-bottom:6px">Statut du paiement</label>
+          <div style="display:flex;gap:8px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;padding:6px 12px;border-radius:7px;border:1.5px solid var(--border);flex:1;justify-content:center" id="lbl-payee"><input type="radio" name="acteStatutPaie" value="payee" id="radio-payee" onchange="updateStatutStyle()"> ✅ Payée</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;padding:6px 12px;border-radius:7px;border:1.5px solid var(--gold);background:rgba(201,168,76,0.08);flex:1;justify-content:center" id="lbl-partielle"><input type="radio" name="acteStatutPaie" value="partielle" id="radio-partielle" onchange="updateStatutStyle()" checked> ⏳ Partielle</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px;padding:6px 12px;border-radius:7px;border:1.5px solid var(--border);flex:1;justify-content:center" id="lbl-impayee"><input type="radio" name="acteStatutPaie" value="impayee" id="radio-impayee" onchange="updateStatutStyle()"> 🔴 Impayée</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lignes fixes consultation + radio -->
+      <div style="background:#fffbf0;border:1.5px solid var(--gold);border-radius:8px;padding:10px 14px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px">📋 Lignes fixes sur la note d'honoraires</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <input type="checkbox" id="addConsultation" checked style="width:16px;height:16px;cursor:pointer">
+          <label for="addConsultation" style="font-size:12.5px;cursor:pointer">Consultation <strong>C — C</strong> = <strong>100 MAD</strong></label>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="addRadio" style="width:16px;height:16px;cursor:pointer">
+          <label for="addRadio" style="font-size:12.5px;cursor:pointer">Radio rétro-alvéolaire <strong>T159 — Z6</strong> = <strong>100 MAD</strong></label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Priorité</label><select id="actePriorite"><option value="urgent">🔴 Urgent</option><option value="normal" selected>🟡 Normal</option><option value="planifie">🟢 Planifié</option></select></div>
+        <div class="form-group"><label>Séances</label><select id="acteSeance"><option>Séance unique</option><option>2 séances</option><option>3 séances</option><option>Multiple</option></select></div>
+      </div>
+      <div class="form-group"><label>Notes cliniques</label><textarea id="acteNotes" rows="2" placeholder="Observations..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('addActe')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveActe(true)">🖨️ Enregistrer + Imprimer</button>
+      <button class="btn btn-primary" onclick="saveActe(false)">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL : Note d'honoraires (impression) ══════════ -->
+<div class="modal-overlay" id="modal-honoraires" style="align-items:flex-start;padding-top:20px;overflow-y:auto">
+  <div style="background:white;border-radius:12px;width:700px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700">🖨️ Note d'honoraires CNOPS</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-gold" onclick="printHonoraires()">🖨️ Imprimer</button>
+        <button class="btn btn-outline" onclick="closeModal('honoraires')">✕ Fermer</button>
+      </div>
+    </div>
+    <div style="padding:20px" id="honorairesPreview">
+      <!-- Generated dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ JAVASCRIPT ══════════ -->
+<script>
+// ─── STATE ──────────────────────────────────────────────────────────────────
+let patients = {};
+let actes = {};
+let appts = {};
+let currentNomenclature = 'permanente';
+let selectedTooth = null;
+let acteNomenclature = 'permanente';
+let currentPatientForChart = null;
+
+// ─── FDI NOMENCLATURE DATA ───────────────────────────────────────────────────
+const toothNames = {
+  '11':'Incisive centrale sup. droite','12':'Incisive latérale sup. droite','13':'Canine sup. droite',
+  '14':'1re prémolaire sup. droite','15':'2e prémolaire sup. droite','16':'1re molaire sup. droite',
+  '17':'2e molaire sup. droite','18':'3e molaire sup. droite',
+  '21':'Incisive centrale sup. gauche','22':'Incisive latérale sup. gauche','23':'Canine sup. gauche',
+  '24':'1re prémolaire sup. gauche','25':'2e prémolaire sup. gauche','26':'1re molaire sup. gauche',
+  '27':'2e molaire sup. gauche','28':'3e molaire sup. gauche',
+  '31':'Incisive centrale inf. gauche','32':'Incisive latérale inf. gauche','33':'Canine inf. gauche',
+  '34':'1re prémolaire inf. gauche','35':'2e prémolaire inf. gauche','36':'1re molaire inf. gauche',
+  '37':'2e molaire inf. gauche','38':'3e molaire inf. gauche',
+  '41':'Incisive centrale inf. droite','42':'Incisive latérale inf. droite','43':'Canine inf. droite',
+  '44':'1re prémolaire inf. droite','45':'2e prémolaire inf. droite','46':'1re molaire inf. droite',
+  '47':'2e molaire inf. droite','48':'3e molaire inf. droite',
+  '51':'I.c. temp. sup. droite','52':'I.l. temp. sup. droite','53':'Canine temp. sup. droite',
+  '54':'1re molaire temp. sup. droite','55':'2e molaire temp. sup. droite',
+  '61':'I.c. temp. sup. gauche','62':'I.l. temp. sup. gauche','63':'Canine temp. sup. gauche',
+  '64':'1re molaire temp. sup. gauche','65':'2e molaire temp. sup. gauche',
+  '71':'I.c. temp. inf. gauche','72':'I.l. temp. inf. gauche','73':'Canine temp. inf. gauche',
+  '74':'1re molaire temp. inf. gauche','75':'2e molaire temp. inf. gauche',
+  '81':'I.c. temp. inf. droite','82':'I.l. temp. inf. droite','83':'Canine temp. inf. droite',
+  '84':'1re molaire temp. inf. droite','85':'2e molaire temp. inf. droite'
+};
+const acteInfo = {
+  // ── RADIODIAGNOSTIC ──
+  'T156': {title:'T156 — 1er cliché rétro-alvéolaire',       desc:'Premier cliché intra-buccal rétro-alvéolaire par examen radiographique. Code B.O.N.',   tarif:40, code:'T156'},
+  'T157': {title:'T157 — 2ème cliché rétro-alvéolaire',      desc:'Deuxième cliché rétro-alvéolaire au cours du même examen. Code B.O.N.',                  tarif:25, code:'T157'},
+  'T158': {title:'T158 — Bilan complet rétro-alvéolaire',    desc:'Bilan complet en radiodiagnostic par dent ou groupe de dents contiguës. Code B.O.N.',    tarif:256,code:'T158'},
+  'T169': {title:'T169 — Examen radiographique numérique',   desc:'Examen numérique intra-buccal (status). Au moins 10 clichés. Code B.O.N.',               tarif:260,code:'T169'},
+  // ── SOINS CONSERVATEURS ──
+  'D700': {title:'D700 — Obturation définitive 1 face',      desc:'Obturation dentaire définitive, 1 face. Cavité simple. Code B.O.N. D700.',               tarif:100,code:'D700'},
+  'D700_2':{title:'D700 — Obturation définitive 2 faces',    desc:'Obturation dentaire définitive, 2 faces ou plus. Code B.O.N. D700.',                     tarif:150,code:'D700'},
+  'D701': {title:'D701 — Obturation composite',              desc:'Cavité composée, traitement global intéressant 2 faces. Composite ou amalgame. Code D701.',tarif:100,code:'D701'},
+  'D707': {title:'D707 — Hygiène bucco-dentaire',            desc:'Détartrage complet sus et sous-gingival (2 séances max), soins parodontaux. Code D707.',  tarif:40, code:'D707'},
+  'D708': {title:'D708 — Détartrage complet',                desc:'Détartrage complet toutes surfaces. Séance unique. Code B.O.N. D708.',                    tarif:40, code:'D708'},
+  'D710': {title:'D710 — Scellement prophylactique',         desc:'Scellement des puits, sillons et fissures. Dents 1ères et 2èmes molaires permanentes. D710.',tarif:50,code:'D710'},
+  // ── ENDODONTIE ──
+  'D702': {title:'D702 — Pulpotomie + soins coronaires',     desc:'Traitement global : pulpotomie + soins coronaires de la chambre. Code B.O.N. D702.',      tarif:70, code:'D702'},
+  'D703': {title:'D703 — TC monoradiculaire',                desc:'Pulpectomie, mise en forme et obturation 3D — 1 canal (incisives, canines). Code D703.',  tarif:100,code:'D703'},
+  'D704': {title:'D704 — TC pluriradiculaire',               desc:'Pulpectomie + soins canalaires complets — molaires/prémolaires (2-4 canaux). Code D704.', tarif:150,code:'D704'},
+  'D705_mol': {title:'D705 — Groupe molaire (TC global)',    desc:'Pulpectomie coronaire + soins conductés à une gangrène pulpaire. Groupe molaire. D705.',   tarif:150,code:'D705'},
+  'D705_prem':{title:'D705 — Groupe prémolaire (TC global)', desc:'Pulpectomie coronaire + soins conductés à une gangrène pulpaire. Prémolaire. D705.',      tarif:100,code:'D705'},
+  'DTR_D48':  {title:'DTR — Retraitement canalaire monor.',  desc:'Retraitement canalaire monoradiculaire (désobturation + retraitement). Code DTR D48.',    tarif:200,code:'DTR'},
+  'DTR_D24':  {title:'DTR — Retraitement canalaire plurir.', desc:'Retraitement canalaire pluriradiculaire complet. Code DTR D24.',                           tarif:300,code:'DTR'},
+  // ── EXTRACTIONS SIMPLES ──
+  'D713': {title:'D713 — Extraction dent permanente',        desc:'Avulsion dent permanente visible sur arcade. Anesthésie locale. Code B.O.N. D713.',       tarif:50, code:'D713'},
+  'D714': {title:'D714 — Extraction 2 dents permanentes',    desc:'Avulsion de 2 dents permanentes au cours de la même séance. Code B.O.N. D714.',           tarif:80, code:'D714'},
+  'D716': {title:'D716 — Extraction dent lactale (enfant)',  desc:'Extraction dent temporaire chez enfant. Anesthésie locale. Code B.O.N. D716.',             tarif:40, code:'D716'},
+  'D717': {title:'D717 — Extraction par alvéolectomie',      desc:'3 à 12 extractions par alvéolectomie, anesthésie générale. Code B.O.N. D717.',             tarif:250,code:'D717'},
+  'D720': {title:'D720 — Extraction dents de sagesse',       desc:'Avulsion dents de sagesse incluses ou semi-incluses. Code B.O.N. D720.',                  tarif:200,code:'D720'},
+  'D721': {title:'D721 — Extraction dent de germe',          desc:'Extraction de dent de germe. Radiographie préopératoire obligatoire. Code D721.',          tarif:200,code:'D721'},
+  'D722': {title:'D722 — Extraction dent incluse/enclavée',  desc:'Extraction dent incluse ou enclavée (couronne, branche montante). Code D722.',             tarif:80, code:'D722'},
+  'D724': {title:'D724 — Germectomie',                       desc:'Germectomie pour une canine ou dent de sagesse. Anesthésie locale. Code D724.',            tarif:80, code:'D724'},
+  'D728': {title:'D728 — Extraction dent sous-muqueuse',     desc:'Extraction dent sous-muqueuse ou surnuméraire. Code B.O.N. D728.',                        tarif:60, code:'D728'},
+  'D730': {title:'D730 — Extraction chirurgicale (couronne)',desc:'Extraction chirurgicale dent incluse avec lambeau — couronne ou branche. Code D730.',       tarif:100,code:'D730'},
+  'D731': {title:'D731 — Extraction + branche montante',     desc:'Extraction chirurgicale dent permanente incluse + traitement branche montante. D731.',     tarif:150,code:'D731'},
+  // ── CHIRURGIE MAXILLAIRE ──
+  'D733': {title:'D733 — Traitement lésions osseuses',       desc:'Traitement chirurgical lésions osseuses et gingivales. Code B.O.N. D733.',                 tarif:40, code:'D733'},
+  'D734': {title:'D734 — Traitement chirurgical racine',     desc:'Traitement chirurgical racine + couronne gingival. Pour 1 dent. Code D734.',               tarif:40, code:'D734'},
+  'D736': {title:'D736 — Dégagement crête (hémimaxillaire)', desc:'Dégagement chirurgical à la crête hémimaxillaire ou canine. Code B.O.N. D736.',           tarif:150,code:'D736'},
+  'D737': {title:'D737 — Dégagement crête totale',           desc:'Dégagement chirurgical crête totale du maxillaire. Code B.O.N. D737.',                     tarif:300,code:'D737'},
+  'D738': {title:'D738 — Curetage périapical',               desc:'Curetage périapical avec ou sans résection apicale. Radio obligatoire. Code D738.',        tarif:150,code:'D738'},
+  'D740': {title:'D740 — Kyste (petit volume)',               desc:'Exérèse chirurgicale kyste petit volume. Radio (radiovélaire oblique) obligatoire. D740.', tarif:150,code:'D740'},
+  'D741': {title:'D741 — Kyste étendu (apex 2 dents+)',      desc:'Kyste étendu aux apex de 2 dents ou plus. Tréphination si nécessaire. Code D741.',        tarif:300,code:'D741'},
+  'D743': {title:'D743 — Gingivectomie partielle',           desc:'Gingivectomie à un segment important du maxillaire en matière plastique. Code D743.',      tarif:50, code:'D743'},
+  'D744': {title:'D744 — Traitement hémorragie post-op.',    desc:'Traitement hémorragie post-opératoire dans une séance autre. Code B.O.N. D744.',           tarif:40, code:'D744'},
+  'D745': {title:'D745 — Désensibilisation musculaire',      desc:'Désensibilisation musculaire. Code B.O.N. D745.',                                           tarif:60, code:'D745'},
+  // ── PROTHÈSE FIXE ──
+  'D752': {title:'D752 — Couronne à incrustation vestibulaire',desc:'Couronne à incrustations vestibulaires ou couronnes veneer en or/jaune. Code D752.',    tarif:750,code:'D752'},
+  'D754': {title:'D754 — Couronne CCM (Céramo-métallique)',  desc:'Couronne céramo-métallique classique. Armature métal + céramique. Code B.O.N. D754.',     tarif:1800,code:'D754'},
+  'D755': {title:'D755 — Couronne CCC (Jacket cuite)',       desc:'Couronne jacket cuite — tout céramique (zircone/Emax). Secteur antérieur. Code D755.',     tarif:2500,code:'D755'},
+  'D756': {title:'D756 — Couronne coulée (métal précieux)',  desc:'Couronne coulée en or ou métal précieux. Haute résistance. Code B.O.N. D756.',             tarif:500,code:'D756'},
+  'D759': {title:'D759 — Pivot pluriradiculaire',            desc:'Restauration pivot sur dent pluriradiculaire. Code B.O.N. D759.',                          tarif:1000,code:'D759'},
+  'D760': {title:'D760 — Pivot esthétique (IMAX)',           desc:'Pivot à pivots esthétiques sur dent pluriradiculaire. Code B.O.N. D760.',                  tarif:1500,code:'D760'},
+  'D761': {title:'D761 — Bridge (élément intermédiaire)',    desc:'Bridge — élément intermédiaire. Cotation par élément. Code B.O.N. D761.',                  tarif:500,code:'D761'},
+  'D769': {title:'D769 — Bridge inlay (métal précieux)',     desc:'Bridge inlay en or, jaune ou métal précieux. Code B.O.N. D769.',                           tarif:600,code:'D769'},
+  // ── PROTHÈSE ADJOINTE ──
+  'D762': {title:'D762 — Prothèse adjointe (3 dents)',       desc:'Appareil/plaque base plastique — jusqu\'à 3 dents. Code B.O.N. D762.',                     tarif:400,code:'D762'},
+  'D763': {title:'D763 — Prothèse adjointe (4 dents)',       desc:'Appareil/plaque base plastique — 4 dents. Code B.O.N. D763.',                              tarif:450,code:'D763'},
+  'D764': {title:'D764 — Prothèse adjointe (5 dents)',       desc:'Appareil/plaque base plastique — 5 dents. Code B.O.N. D764.',                              tarif:500,code:'D764'},
+  'D765': {title:'D765 — Prothèse adjointe (6 dents)',       desc:'Appareil/plaque base plastique — 6 dents. Code B.O.N. D765.',                              tarif:550,code:'D765'},
+  'D766': {title:'D766 — Prothèse adjointe (7 dents)',       desc:'Appareil/plaque base plastique — 7 dents. Code B.O.N. D766.',                              tarif:600,code:'D766'},
+  'D767': {title:'D767 — Prothèse adjointe (8 dents)',       desc:'Appareil/plaque base plastique — 8 dents. Code B.O.N. D767.',                              tarif:650,code:'D767'},
+  'D768': {title:'D768 — Prothèse adjointe (9 dents)',       desc:'Appareil/plaque base plastique — 9 dents. Code B.O.N. D768.',                              tarif:700,code:'D768'},
+  'D770': {title:'D770 — Prothèse adjointe (12 dents)',      desc:'Appareil/plaque base plastique — 12 dents. Code B.O.N. D770.',                             tarif:800,code:'D770'},
+  'D771': {title:'D771 — Prothèse adjointe (13 dents)',      desc:'Appareil/plaque base — 13 dents. Code B.O.N. D771.',                                       tarif:850,code:'D771'},
+  'D772': {title:'D772 — Prothèse totale maxillaire sup.',   desc:'Prothèse adjointe totale du maxillaire supérieur. Code B.O.N. D772.',                      tarif:1200,code:'D772'},
+  'D773': {title:'D773 — Prothèse totale maxillaire inf.',   desc:'Prothèse adjointe totale du maxillaire inférieur. Code B.O.N. D773.',                      tarif:1200,code:'D773'},
+  'D774': {title:'D774 — Prothèse totale des 2 maxillaires', desc:'Prothèse adjointe totale des deux maxillaires. Code B.O.N. D774.',                         tarif:2200,code:'D774'},
+  'D776': {title:'D776 — Prothèse contreplaquée',            desc:'Prothèse contreplaquée ou massive sur plaque base métallique. Code D776.',                 tarif:1000,code:'D776'},
+  'D779': {title:'D779 — Réparation plaque base métallique', desc:'Réparation fracture plaque base métallique, non comprise. Code B.O.N. D779.',              tarif:100,code:'D779'},
+  'D780': {title:'D780 — Ajout dent ou crochet',             desc:'Dent ou crochet ajouté/remplacé sur appareil existant. Code B.O.N. D780.',                 tarif:80, code:'D780'},
+  // ── IMPLANTOLOGIE ──
+  'implant_pose':  {title:"Pose d\'implant dentaire",         desc:'Implant en titane grade IV. Phase chirurgicale. Cicatrisation osseuse 3-6 mois.',           tarif:4500,code:'IMP'},
+  'implant_ccm':   {title:'Implant + Couronne CCM',          desc:'Vis implantaire + couronne céramo-métallique sur pilier.',                                  tarif:6000,code:'IMP'},
+  'implant_ccc':   {title:'Implant + Couronne CCC (Zircone)',desc:'Vis implantaire + couronne tout céramique zircone. Solution premium.',                      tarif:7000,code:'IMP'},
+  'implant_imax':  {title:'Implant + Couronne IMAX',         desc:'Vis implantaire + couronne céramo-métallique renforcée IMAX.',                             tarif:6500,code:'IMP'},
+  // ── ORTHODONTIE ──
+  'D620': {title:'D620 — Rééducation déglutition',           desc:'Rééducation de la déglutition, éducation de la parole — par séance (15 séances max). D620.',tarif:50,code:'D620'},
+  'D622': {title:'D622 — Traitement dysharmonies',           desc:'Traitement des dysharmonies dento-faciales. Par séance. Code B.O.N. D622.',                tarif:75, code:'D622'},
+  'D823': {title:'D823 — Traitement orthodontique',          desc:'Traitement orthodontique provisoire — plafond 6 mois. Code B.O.N. D823.',                  tarif:540,code:'D823'},
+  'D831': {title:'D831 — Première séance orthodontie',       desc:'Première séance de traitement orthodontique. Code B.O.N. D831.',                           tarif:75, code:'D831'},
+  'D822': {title:'D822 — Deuxième année orthodontie',        desc:'Deuxième année de traitement orthodontique. Code B.O.N. D822.',                            tarif:75, code:'D822'},
+  'D543': {title:'D543 — Troisième année orthodontie',       desc:'Troisième année de traitement orthodontique. Code B.O.N. D543.',                           tarif:50, code:'D543'},
+};
+const acteClasses = {
+  // Obturations → traité (vert)
+  'D700':'treated','D700_2':'treated','D701':'treated','D707':'treated','D708':'treated','D710':'treated',
+  // Endodontie → canal (violet)
+  'D702':'canal','D703':'canal','D704':'canal','D705_mol':'canal','D705_prem':'canal','DTR_D48':'canal','DTR_D24':'canal',
+  // Extractions → extraction (rouge)
+  'D713':'extraction','D714':'extraction','D716':'extraction','D717':'extraction',
+  'D720':'extraction','D721':'extraction','D722':'extraction','D724':'extraction','D728':'extraction','D730':'extraction','D731':'extraction',
+  // Chirurgie → extraction (rouge)
+  'D733':'extraction','D734':'extraction','D736':'extraction','D737':'extraction','D738':'extraction',
+  'D740':'extraction','D741':'extraction','D743':'extraction','D744':'extraction','D745':'extraction',
+  // Prothèse fixe → couronne (or)
+  'D752':'crown','D754':'crown','D755':'crown','D756':'crown','D759':'crown','D760':'crown','D761':'crown','D769':'crown',
+  // Prothèse adjointe → couronne (or)
+  'D762':'crown','D763':'crown','D764':'crown','D765':'crown','D766':'crown','D767':'crown',
+  'D768':'crown','D770':'crown','D771':'crown','D772':'crown','D773':'crown','D774':'crown','D776':'crown','D779':'crown','D780':'crown',
+  // Implants → implant (bleu)
+  'implant_pose':'implant','implant_ccm':'implant','implant_ccc':'implant','implant_imax':'implant',
+  // Radio + ortho → aucun marquage
+  'T156':'','T157':'','T158':'','T169':'',
+  'D620':'','D622':'','D823':'','D831':'','D822':'','D543':''
+};
+
+// ─── FIREBASE HELPERS ────────────────────────────────────────────────────────
+function fbSave(path, data) {
+  showSync();
+  if(window.firebaseReady) {
+    window._set(window._ref(window._db, path), data)
+      .then(()=>hideSync())
+      .catch(e=>{ console.error(e); hideSync(); });
+  } else {
+    setTimeout(hideSync, 400);
+  }
+  addActivity(`✏️ Sauvegarde : ${path.split('/')[0]}`);
+}
+
+function fbPush(path, data) {
+  showSync();
+  if(window.firebaseReady) {
+    return window._push(window._ref(window._db, path), data)
+      .then(r=>{ hideSync(); return r; })
+      .catch(e=>{ console.error(e); hideSync(); return null; });
+  } else {
+    const id = 'local_' + Date.now();
+    hideSync();
+    return Promise.resolve({key: id});
+  }
+}
+
+function fbDelete(path) {
+  showSync();
+  if(window.firebaseReady) {
+    window._remove(window._ref(window._db, path)).then(hideSync);
+  } else { setTimeout(hideSync, 300); }
+}
+
+function fbListen(path, cb) {
+  if(window.firebaseReady) {
+    window._onValue(window._ref(window._db, path), snap => {
+      cb(snap.val() || {});
+    });
+  } else {
+    cb({});
+  }
+}
+
+// ─── SYNC UI ─────────────────────────────────────────────────────────────────
+function showSync() { document.getElementById('syncBar').classList.add('active'); }
+function hideSync() { document.getElementById('syncBar').classList.remove('active'); }
+
+function setConnectionStatus(status) {
+  const dot = document.getElementById('connDot');
+  const lbl = document.getElementById('connLabel');
+  const role = document.getElementById('syncStatus');
+  if(!dot || !lbl) return;
+  if(status === 'online') {
+    dot.className = 'dot green'; lbl.textContent = 'Synchronisé'; role.textContent = '🟢 En ligne';
+  } else if(status === 'demo') {
+    dot.className = 'dot orange'; lbl.textContent = 'Mode démo'; role.textContent = '🟡 Mode local';
+  } else {
+    dot.className = 'dot red'; lbl.textContent = 'Hors ligne'; role.textContent = '🔴 Hors ligne';
+  }
+}
+
+// ─── ACTIVITY FEED ───────────────────────────────────────────────────────────
+function addActivity(msg) {
+  const feed = document.getElementById('activityFeed');
+  const now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+  const empty = feed.querySelector('.empty-row');
+  if(empty) empty.remove();
+  const el = document.createElement('div');
+  el.style.cssText='font-size:12px;padding:5px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;color:var(--text-main)';
+  el.innerHTML=`<span>${msg}</span><span style="color:var(--text-soft)">${now}</span>`;
+  feed.insertBefore(el, feed.firstChild);
+  if(feed.children.length > 15) feed.removeChild(feed.lastChild);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Date badge
+  const now = new Date();
+  document.getElementById('todayBadge').textContent = '📅 ' + now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('pageSub').textContent = now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // Agenda default date
+  document.getElementById('agendaDate').valueAsDate = now;
+
+  // Build tooth charts
+  buildToothCharts();
+  renderToothButtons('permanente');
+
+  // Setup Firebase listeners or demo data — wait for async module
+  let attempts = 0;
+  function tryFirebase() {
+    attempts++;
+    if(window.firebaseReady) {
+      setConnectionStatus('online');
+      
+      listenFirebase();
+    } else if(attempts < 20) {
+      setTimeout(tryFirebase, 200);
+    } else {
+      setConnectionStatus('demo');
+      loadDemoData();
+    }
+  }
+  setTimeout(tryFirebase, 300);
+});
+
+function dismissSetup() {
+  
+  loadDemoData();
+}
+
+// ─── FIREBASE LISTENERS ──────────────────────────────────────────────────────
+function listenFirebase() {
+  fbListen('patients', data => {
+    patients = data;
+    refreshPatientsList();
+    refreshPatientSelects();
+    updateDashboardStats();
+    addActivity('👥 Patients mis à jour');
+  });
+  fbListen('actes', data => {
+    actes = data;
+    refreshFacturation();
+    updateDashboardStats();
+    if(currentPatientForChart) loadPatientChart();
+    addActivity('🦷 Actes mis à jour');
+  });
+  fbListen('appts', data => {
+    appts = data;
+    loadAgenda();
+    updateDashboardStats();
+    addActivity('📅 RDV mis à jour');
+  });
+}
+
+// ─── DEMO DATA ────────────────────────────────────────────────────────────────
+function loadDemoData() {
+  patients = {
+    'P001':{id:'P001',prenom:'Fatima Zahra',nom:'Bennani',tel:'06 61 23 45 67',dob:'1991-05-12',sexe:'Féminin',notes:'Allergie pénicilline'},
+    'P002':{id:'P002',prenom:'Mohammed',nom:'Alaoui',tel:'06 72 34 56 78',dob:'1973-09-03',sexe:'Masculin',notes:''},
+    'P003':{id:'P003',prenom:'Khadija',nom:'Tazi',tel:'06 83 45 67 89',dob:'1997-11-22',sexe:'Féminin',notes:'Diabète type 2'},
+    'P004':{id:'P004',prenom:'Youssef',nom:'Chraibi',tel:'06 94 56 78 90',dob:'2009-03-15',sexe:'Masculin',notes:''},
+  };
+  const today = new Date().toISOString().split('T')[0];
+  appts = {
+    'A001':{id:'A001',patient:'P001',acte:'Détartrage',date:today,heure:'09:00',duree:'30 min',statut:'done',notes:''},
+    'A002':{id:'A002',patient:'P002',acte:'Extraction simple',date:today,heure:'10:00',duree:'45 min',statut:'done',notes:''},
+    'A003':{id:'A003',patient:'P003',acte:'Couronne CCM',date:today,heure:'11:00',duree:'1h',statut:'waiting',notes:''},
+    'A004':{id:'A004',patient:'P004',acte:'Orthodontie',date:today,heure:'14:00',duree:'30 min',statut:'upcoming',notes:''},
+  };
+  actes = {
+    'AC001':{id:'AC001',patientId:'P001',acteType:'detartrage',acteLabel:'Détartrage complet',dent:'—',total:300,acompte:300,reste:0,statut:'payee',mode:'especes',date:today,notes:''},
+    'AC002':{id:'AC002',patientId:'P002',acteType:'extraction_simple',acteLabel:'Extraction simple',dent:'36',total:400,acompte:200,reste:200,statut:'partielle',mode:'especes',date:today,notes:''},
+    'AC003':{id:'AC003',patientId:'P003',acteType:'couronne_ccm',acteLabel:'Couronne CCM',dent:'26',total:1800,acompte:0,reste:1800,statut:'impayee',mode:'cheque',date:today,notes:''},
+  };
+  refreshPatientsList();
+  refreshPatientSelects();
+  loadAgenda();
+  refreshFacturation();
+  updateDashboardStats();
+}
+
+// ─── PATIENTS ─────────────────────────────────────────────────────────────────
+function savePatient() {
+  const prenom = document.getElementById('pat_prenom').value.trim();
+  const nom    = document.getElementById('pat_nom').value.trim();
+  if(!prenom || !nom) { alert('Prénom et nom obligatoires.'); return; }
+  const id = 'P' + Date.now();
+  const p = {
+    id, prenom, nom,
+    dob:    document.getElementById('pat_dob').value,
+    sexe:   document.getElementById('pat_sexe').value,
+    tel:    document.getElementById('pat_tel').value,
+    email:  document.getElementById('pat_email').value,
+    adresse:document.getElementById('pat_adresse').value,
+    notes:  document.getElementById('pat_notes').value,
+    createdAt: new Date().toISOString()
+  };
+  if(window.firebaseReady) {
+    fbSave('patients/'+id, p);
+  } else {
+    patients[id] = p;
+    refreshPatientsList();
+    refreshPatientSelects();
+    updateDashboardStats();
+    addActivity(`👤 Nouveau patient : ${prenom} ${nom}`);
+  }
+  closeModal('addPatient');
+  ['pat_prenom','pat_nom','pat_dob','pat_tel','pat_email','pat_adresse','pat_notes'].forEach(f => { const el=document.getElementById(f); if(el) el.value=''; });
+}
+
+function refreshPatientsList() {
+  const tbody = document.getElementById('patientsTableBody');
+  const search = document.getElementById('searchPatient')?.value?.toLowerCase() || '';
+  const list = Object.values(patients).filter(p =>
+    (p.prenom+' '+p.nom).toLowerCase().includes(search)
+  );
+  if(!list.length) { tbody.innerHTML='<tr><td colspan="6" class="empty-row">Aucun patient trouvé</td></tr>'; return; }
+  tbody.innerHTML = list.map(p => {
+    const age = p.dob ? Math.floor((Date.now()-new Date(p.dob))/(365.25*24*3600*1000)) : '—';
+    const patientActes = Object.values(actes).filter(a=>a.patientId===p.id);
+    const lastActe = patientActes.sort((a,b)=>b.date?.localeCompare(a.date))[0];
+    const derVisite = lastActe ? new Date(lastActe.date).toLocaleDateString('fr-FR') : '—';
+    const tag = patientActes.length ? '<span class="tag tag-green">Actif</span>' : '<span class="tag tag-blue">Nouveau</span>';
+    return `<tr>
+      <td><div class="patient-name">${p.prenom} ${p.nom}</div><div class="patient-id">#${p.id}</div></td>
+      <td>${p.tel||'—'}</td>
+      <td>${age} ans</td>
+      <td>${derVisite}</td>
+      <td>${tag}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="openPatientSoins('${p.id}')">Dossier</button>
+        <button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deletePatient('${p.id}')">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterPatients() { refreshPatientsList(); }
+
+function deletePatient(id) {
+  if(!confirm('Supprimer ce patient ? Cette action est irréversible.')) return;
+  if(window.firebaseReady) { fbDelete('patients/'+id); }
+  else { delete patients[id]; refreshPatientsList(); refreshPatientSelects(); updateDashboardStats(); }
+  addActivity('🗑️ Patient supprimé');
+}
+
+function refreshPatientSelects() {
+  const list = Object.values(patients);
+  // Soins select
+  const soinsSelect = document.getElementById('soinsPatientSelect');
+  soinsSelect.innerHTML = '<option value="">— Sélectionner un patient —</option>' +
+    list.map(p=>`<option value="${p.id}">${p.prenom} ${p.nom}</option>`).join('');
+  // Appt select
+  const apptSelect = document.getElementById('appt_patient');
+  apptSelect.innerHTML = '<option value="">— Sélectionner —</option>' +
+    list.map(p=>`<option value="${p.id}">${p.prenom} ${p.nom}</option>`).join('');
+}
+
+function openPatientSoins(id) {
+  switchPage('soins', document.querySelector('[onclick*=soins]'));
+  document.getElementById('soinsPatientSelect').value = id;
+  loadPatientChart();
+}
+
+// ─── AGENDA ──────────────────────────────────────────────────────────────────
+function saveAppt() {
+  const patientId = document.getElementById('appt_patient').value;
+  const acte      = document.getElementById('appt_acte').value;
+  const date      = document.getElementById('appt_date').value;
+  const heure     = document.getElementById('appt_heure').value;
+  if(!patientId||!date||!heure) { alert('Patient, date et heure sont obligatoires.'); return; }
+  const id = 'A'+Date.now();
+  const appt = {
+    id, patientId, acte, date, heure,
+    duree:  document.getElementById('appt_duree').value,
+    statut: document.getElementById('appt_statut').value,
+    notes:  document.getElementById('appt_notes').value,
+    createdAt: new Date().toISOString()
+  };
+  if(window.firebaseReady) { fbSave('appts/'+id, appt); }
+  else { appts[id]=appt; loadAgenda(); updateDashboardStats(); addActivity(`📅 RDV ajouté`); }
+  closeModal('addAppt');
+  ['appt_date','appt_heure','appt_notes'].forEach(f=>{document.getElementById(f).value='';});
+}
+
+function loadAgenda() {
+  const date = document.getElementById('agendaDate')?.value;
+  if(!date) return;
+  const list = document.getElementById('agendaList');
+  const title = document.getElementById('agendaDayTitle');
+  title.textContent = '📅 ' + new Date(date+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const dayAppts = Object.values(appts).filter(a=>a.date===date).sort((a,b)=>a.heure?.localeCompare(b.heure));
+  if(!dayAppts.length) { list.innerHTML='<div class="empty-row">Aucun rendez-vous ce jour</div>'; return; }
+  const statusMap = {done:'status-done',waiting:'status-waiting',upcoming:'status-upcoming',cancelled:'status-cancelled'};
+  const statusLabel = {done:'Terminé',waiting:'En salle',upcoming:'À venir',cancelled:'Annulé'};
+  list.innerHTML = dayAppts.map(a => {
+    const p = patients[a.patientId] || {prenom:'?',nom:'?'};
+    return `<div class="appt-slot">
+      <div class="appt-time">${a.heure||'--:--'}</div>
+      <div class="appt-info">
+        <div class="appt-name">${p.prenom} ${p.nom}</div>
+        <div class="appt-type">${a.acte||'Acte'} · ${a.duree||''}</div>
+      </div>
+      <span class="appt-status ${statusMap[a.statut]||'status-upcoming'}">${statusLabel[a.statut]||'À venir'}</span>
+      <button onclick="deleteAppt('${a.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-soft);font-size:14px" title="Supprimer">✕</button>
+    </div>`;
+  }).join('');
+  document.getElementById('badgeAppt').textContent = dayAppts.filter(a=>a.statut==='upcoming').length;
+}
+
+function deleteAppt(id) {
+  if(!confirm('Supprimer ce rendez-vous ?')) return;
+  if(window.firebaseReady) { fbDelete('appts/'+id); }
+  else { delete appts[id]; loadAgenda(); updateDashboardStats(); }
+}
+
+// ─── ACTES / SOINS ────────────────────────────────────────────────────────────
+function loadPatientChart() {
+  const id = document.getElementById('soinsPatientSelect').value;
+  if(!id) return;
+  currentPatientForChart = id;
+  const p = patients[id];
+  document.getElementById('schemaTitle').textContent = `🦷 Schéma dentaire — ${p?.prenom||''} ${p?.nom||''}`;
+  // Reset chart then apply saved states
+  resetTeethSilent();
+  const patActes = Object.values(actes).filter(a=>a.patientId===id && a.dent && a.dent!=='—' && a.dent!=='multiple');
+  patActes.forEach(a => {
+    const cls = acteClasses[a.acteType];
+    if(cls) applyToothClass(a.dent, a.nom_type||'permanente', cls);
+  });
+  // Load history
+  refreshHistActes(id);
+  refreshPlan(id);
+}
+
+function refreshHistActes(id) {
+  const tbody = document.getElementById('histActesBody');
+  const patActes = Object.values(actes).filter(a=>a.patientId===id).sort((a,b)=>b.date?.localeCompare(a.date));
+  if(!patActes.length) { tbody.innerHTML='<tr><td colspan="4" class="empty-row">Aucun acte enregistré</td></tr>'; return; }
+  const statutColors = {payee:'#27ae60',partielle:'#e67e22',impayee:'#e74c3c'};
+  tbody.innerHTML = patActes.map(a => `<tr>
+    <td>${new Date(a.date+'T12:00').toLocaleDateString('fr-FR')}</td>
+    <td><strong>${a.acteLabel}</strong>${a.notes?'<br><span style="font-size:11px;color:var(--text-soft)">'+a.notes+'</span>':''}</td>
+    <td>${a.dent||'—'}</td>
+    <td>
+      <div style="font-weight:700">${(a.total||0).toLocaleString('fr-FR')} MAD</div>
+      ${(a.acompte||0)>0?'<div style="font-size:10px;color:var(--green)">Acompte '+a.acompte.toLocaleString('fr-FR')+' MAD</div>':''}
+      <div style="font-size:10px;color:${statutColors[a.statut]||'#666'};font-weight:600">${a.statut==='payee'?'✅ Payée':a.statut==='partielle'?'⏳ Partielle':'🔴 Impayée'}</div>
+      <button onclick="deleteActe('${a.id}')" style="font-size:10px;color:var(--red);background:none;border:none;cursor:pointer;margin-top:2px">Supprimer</button>
+    </td>
+  </tr>`).join('');
+}
+
+function refreshPlan(id) {
+  const plan = document.getElementById('planBody');
+  const patActes = Object.values(actes).filter(a=>a.patientId===id && a.statut!=='payee').sort((a,b)=>b.date?.localeCompare(a.date));
+  if(!patActes.length) { plan.innerHTML='<div class="empty-row">Aucun soin en attente</div>'; return; }
+  const priorityColor = {urgent:'rgba(231,76,60,0.1)',normal:'rgba(11,31,58,0.08)',planifie:'rgba(46,204,113,0.1)'};
+  const priorityLabel = {urgent:'🔴 Urgent',normal:'🟡 À faire',planifie:'🟢 Planifié'};
+  plan.innerHTML = patActes.map(a=>`<div class="appt-slot" style="margin-bottom:6px">
+    <div class="appt-info">
+      <div class="appt-name">${a.acteLabel}${a.dent&&a.dent!=='—'?' — dent '+a.dent:''}</div>
+      <div class="appt-type">${a.notes||'Acte à réaliser'} · <strong>${(a.total||0).toLocaleString('fr-FR')} MAD</strong>
+        ${(a.reste||0)>0?' · <span style="color:var(--orange)">Reste: '+a.reste.toLocaleString('fr-FR')+' MAD</span>':''}
+      </div>
+    </div>
+    <span class="appt-status" style="background:${priorityColor[a.priorite]||priorityColor.normal}">${priorityLabel[a.priorite]||priorityLabel.normal}</span>
+  </div>`).join('');
+}
+
+function saveActe(doPrint=false) {
+  const patientId = document.getElementById('soinsPatientSelect').value;
+  const acteType  = document.getElementById('acteTypeSelect').value;
+  if(!acteType) { alert('Veuillez sélectionner un type d\'acte.'); return; }
+  if(!patientId) { alert('Veuillez sélectionner un patient.'); return; }
+
+  const base       = parseFloat(document.getElementById('acteTarifBase').value)||0;
+  const remiseVal  = parseFloat(document.getElementById('acteRemise').value)||0;
+  const remiseType = document.getElementById('acteRemiseType').value;
+  const acompte    = parseFloat(document.getElementById('acteAcompte').value)||0;
+  const modePaie   = document.getElementById('acteModePaiement').value;
+  const statutPaie = document.querySelector('input[name="acteStatutPaie"]:checked')?.value||'impayee';
+  const priorite   = document.getElementById('actePriorite').value;
+  const notes      = document.getElementById('acteNotes').value;
+
+  const remiseMad = remiseType==='pct' ? (base*remiseVal/100) : remiseVal;
+  const total = Math.max(0, base-remiseMad);
+  const reste = Math.max(0, total-acompte);
+  const dent  = selectedTooth==='multiple'?'multiple':selectedTooth||'—';
+  const id = 'AC'+Date.now();
+  const acteData = {
+    id, patientId, acteType,
+    acteLabel: acteInfo[acteType]?.title||acteType,
+    dent, nom_type: acteNomenclature,
+    base, remise:remiseMad, total, acompte, reste,
+    statut: statutPaie, mode: modePaie,
+    priorite, notes, seance: document.getElementById('acteSeance').value,
+    date: new Date().toISOString().split('T')[0],
+    createdAt: new Date().toISOString()
+  };
+
+  // Apply to tooth chart
+  const cls = acteClasses[acteType]||'';
+  if(cls && dent!=='—' && dent!=='multiple') applyToothClass(dent, acteNomenclature, cls);
+
+  if(window.firebaseReady) { fbSave('actes/'+id, acteData); }
+  else {
+    actes[id]=acteData;
+    refreshHistActes(patientId);
+    refreshPlan(patientId);
+    refreshFacturation();
+    updateDashboardStats();
+    addActivity(`🦷 Acte : ${acteData.acteLabel}`);
+  }
+  closeModal('addActe');
+  resetActeForm();
+  if(doPrint) {
+    setTimeout(()=>generateHonoraires(acteData), 300);
+  }
+}
+
+function deleteActe(id) {
+  if(!confirm('Supprimer cet acte ?')) return;
+  const patientId = actes[id]?.patientId;
+  if(window.firebaseReady) { fbDelete('actes/'+id); }
+  else { delete actes[id]; if(patientId){refreshHistActes(patientId);refreshPlan(patientId);}refreshFacturation();updateDashboardStats(); }
+}
+
+// ─── FACTURATION ─────────────────────────────────────────────────────────────
+function refreshFacturation() {
+  const list = document.getElementById('facturationList');
+  const allActes = Object.values(actes).sort((a,b)=>b.date?.localeCompare(a.date));
+  if(!allActes.length) { list.innerHTML='<div class="empty-row">Aucune facture enregistrée</div>'; return; }
+
+  let payees=0, attente=0;
+  allActes.forEach(a => {
+    if(a.statut==='payee') payees+=a.total||0;
+    else attente+=a.reste||a.total||0;
+  });
+  document.getElementById('facPayees').textContent = payees.toLocaleString('fr-FR');
+  document.getElementById('facAttente').textContent = attente.toLocaleString('fr-FR');
+  document.getElementById('facTotal').textContent   = (payees+attente).toLocaleString('fr-FR');
+
+  const statutColors = {payee:'#27ae60',partielle:'#e67e22',impayee:'#e74c3c'};
+  const statutLabel  = {payee:'✅ Payée',partielle:'⏳ Partielle',impayee:'🔴 Impayée'};
+  const modeLabel = {especes:'💵 Espèces',cheque:'📋 Chèque',virement:'🏦 Virement',carte:'💳 Carte',cnops:'🏥 CNOPS',cnss:'🏥 CNSS',echeance:'📅 Échelonné'};
+
+  list.innerHTML = allActes.map(a => {
+    const p = patients[a.patientId]||{prenom:'?',nom:'?'};
+    return `<div class="invoice-item">
+      <div style="min-width:100px;font-size:11px;font-weight:700;color:var(--navy)">${new Date((a.date||new Date().toISOString().split('T')[0])+'T12:00').toLocaleDateString('fr-FR')}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:13px">${p.prenom} ${p.nom}</div>
+        <div style="font-size:11.5px;color:var(--text-soft)">${a.acteLabel}${a.dent&&a.dent!=='—'?' · dent '+a.dent:''} · ${modeLabel[a.mode]||a.mode||''}</div>
+      </div>
+      <div style="text-align:right;min-width:110px">
+        <div style="font-weight:800;font-size:14px;color:var(--navy)">${(a.total||0).toLocaleString('fr-FR')} MAD</div>
+        ${(a.acompte||0)>0?'<div style="font-size:10px;color:var(--green)">Acompte: '+(a.acompte||0).toLocaleString('fr-FR')+' MAD</div>':''}
+        ${(a.reste||0)>0?'<div style="font-size:10px;color:var(--orange)">Reste: '+(a.reste||0).toLocaleString('fr-FR')+' MAD</div>':''}
+        <div style="font-size:11px;font-weight:700;color:${statutColors[a.statut]||'#666'}">${statutLabel[a.statut]||'—'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── DASHBOARD STATS ──────────────────────────────────────────────────────────
+function updateDashboardStats() {
+  // Patients
+  const patCount = Object.keys(patients).length;
+  document.getElementById('statPatients').textContent = patCount;
+
+  // Appts today
+  const today = new Date().toISOString().split('T')[0];
+  const todayAppts = Object.values(appts).filter(a=>a.date===today);
+  document.getElementById('statApptToday').textContent = todayAppts.length;
+  document.getElementById('statApptChange').textContent = todayAppts.filter(a=>a.statut==='upcoming').length + ' restants';
+
+  // CA + reste
+  const month = today.slice(0,7);
+  let ca=0, reste=0;
+  Object.values(actes).forEach(a => {
+    if((a.date||'').startsWith(month)) { ca+=a.total||0; reste+=a.reste||0; }
+  });
+  document.getElementById('statCA').textContent    = ca.toLocaleString('fr-FR');
+  document.getElementById('statReste').textContent = reste.toLocaleString('fr-FR');
+
+  // Dashboard appt list
+  const dashList = document.getElementById('dashApptList');
+  if(!todayAppts.length) { dashList.innerHTML='<div class="empty-row">Aucun rendez-vous aujourd\'hui</div>'; }
+  else {
+    const statusMap = {done:'status-done',waiting:'status-waiting',upcoming:'status-upcoming',cancelled:'status-cancelled'};
+    const statusLabel = {done:'Terminé',waiting:'En salle',upcoming:'À venir',cancelled:'Annulé'};
+    dashList.innerHTML = todayAppts.sort((a,b)=>a.heure?.localeCompare(b.heure)).map(a=>{
+      const p=patients[a.patientId]||{prenom:'?',nom:'?'};
+      return `<div class="appt-slot">
+        <div class="appt-time">${a.heure||''}</div>
+        <div class="appt-info"><div class="appt-name">${p.prenom} ${p.nom}</div><div class="appt-type">${a.acte||''}</div></div>
+        <span class="appt-status ${statusMap[a.statut]||'status-upcoming'}">${statusLabel[a.statut]||'À venir'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Dashboard recent actes
+  const dashActes = document.getElementById('dashActesList');
+  const recent = Object.values(actes).sort((a,b)=>b.createdAt?.localeCompare(a.createdAt)).slice(0,4);
+  if(!recent.length) { dashActes.innerHTML='<div class="empty-row">Aucun acte récent</div>'; }
+  else {
+    dashActes.innerHTML = recent.map(a=>{
+      const p=patients[a.patientId]||{prenom:'?',nom:'?'};
+      return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px">
+        <span><strong>${p.prenom} ${p.nom}</strong><br><span style="color:var(--text-soft);font-size:11px">${a.acteLabel}</span></span>
+        <span style="font-weight:700;color:var(--navy)">${(a.total||0).toLocaleString('fr-FR')} MAD</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Stats page
+  const acteCount = {};
+  const modeCount = {};
+  Object.values(actes).forEach(a => {
+    acteCount[a.acteLabel] = (acteCount[a.acteLabel]||0)+1;
+    modeCount[a.mode]      = (modeCount[a.mode]||0)+1;
+  });
+  const statsActes = document.getElementById('statsActes');
+  const topActes = Object.entries(acteCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxA = topActes[0]?.[1]||1;
+  statsActes.innerHTML = topActes.length ? topActes.map(([label,count])=>`
+    <div class="flex-between" style="margin-bottom:10px">
+      <span style="font-size:13px;flex:1">${label}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:80px;height:8px;background:var(--border);border-radius:4px">
+          <div style="width:${Math.round(count/maxA*100)}%;height:100%;background:var(--navy);border-radius:4px"></div>
+        </div>
+        <span class="text-soft">${count}</span>
+      </div>
+    </div>`).join('') : '<div class="empty-row">Aucune donnée</div>';
+
+  const modeLabels = {especes:'💵 Espèces',cheque:'📋 Chèque',virement:'🏦 Virement',carte:'💳 Carte',cnops:'🏥 CNOPS',cnss:'🏥 CNSS',echeance:'📅 Échelonné'};
+  const statsModes = document.getElementById('statsModes');
+  const topModes = Object.entries(modeCount).sort((a,b)=>b[1]-a[1]);
+  const maxM = topModes[0]?.[1]||1;
+  statsModes.innerHTML = topModes.length ? topModes.map(([mode,count])=>`
+    <div class="flex-between" style="margin-bottom:10px">
+      <span style="font-size:13px;flex:1">${modeLabels[mode]||mode}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:80px;height:8px;background:var(--border);border-radius:4px">
+          <div style="width:${Math.round(count/maxM*100)}%;height:100%;background:var(--gold);border-radius:4px"></div>
+        </div>
+        <span class="text-soft">${count}</span>
+      </div>
+    </div>`).join('') : '<div class="empty-row">Aucune donnée</div>';
+}
+
+// ─── TOOTH CHART BUILDER ──────────────────────────────────────────────────────
+function buildToothCharts() {
+  const quadrants = {
+    Q1:['18','17','16','15','14','13','12','11'],
+    Q2:['21','22','23','24','25','26','27','28'],
+    Q3:['31','32','33','34','35','36','37','38'],
+    Q4:['48','47','46','45','44','43','42','41'],
+    Q5:['55','54','53','52','51'],
+    Q6:['61','62','63','64','65'],
+    Q7:['71','72','73','74','75'],
+    Q8:['85','84','83','82','81']
+  };
+  Object.entries(quadrants).forEach(([q, teeth]) => {
+    const row = document.getElementById('row'+q);
+    if(!row) return;
+    const isTemp = parseInt(q[1])>=5;
+    teeth.forEach(n => {
+      const d = document.createElement('div');
+      d.className = 'tooth';
+      d.id = 'chart_'+n;
+      d.textContent = n;
+      d.title = toothNames[n]||n;
+      if(isTemp) { d.style.background='#f0f7ff'; d.style.borderColor='#7bb3e0'; d.style.color='#2c6ea8'; }
+      d.onclick = () => { toothClick(n, isTemp?'temporaire':'permanente'); };
+      row.appendChild(d);
+    });
+  });
+}
+
+function applyToothClass(num, nom, cls) {
+  const el = document.getElementById('chart_'+num);
+  if(!el) return;
+  el.className = 'tooth '+cls;
+  if(cls==='implant'){ el.style.background='#e8f0fe'; el.style.borderColor='#4285f4'; el.style.color='#1a56db'; }
+  else if(cls==='canal'){ el.style.background='#f3e8ff'; el.style.borderColor='#9333ea'; el.style.color='#7e22ce'; }
+  else { el.style.background=''; el.style.borderColor=''; el.style.color=''; }
+}
+
+function resetTeethSilent() {
+  document.querySelectorAll('[id^=chart_]').forEach(t => {
+    const n = t.id.replace('chart_','');
+    const isTemp = parseInt(n[0])>=5;
+    t.className='tooth';
+    if(isTemp){ t.style.background='#f0f7ff'; t.style.borderColor='#7bb3e0'; t.style.color='#2c6ea8'; }
+    else { t.style.background=''; t.style.borderColor=''; t.style.color=''; }
+  });
+}
+
+function resetTeeth() {
+  if(!confirm('Réinitialiser le schéma dentaire ?')) return;
+  resetTeethSilent();
+}
+
+// ─── NOMENCLATURE TOGGLE ─────────────────────────────────────────────────────
+function setNomenclature(type) {
+  currentNomenclature=type;
+  document.getElementById('schemaPermanente').style.display=type==='permanente'?'block':'none';
+  document.getElementById('schemaTemporaire').style.display=type==='temporaire'?'block':'none';
+  document.getElementById('btnPerm').style.cssText=type==='permanente'?'padding:6px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--navy);color:white':'padding:6px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--text-soft)';
+  document.getElementById('btnTemp').style.cssText=type==='temporaire'?'padding:6px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:#2c6ea8;color:white':'padding:6px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:var(--text-soft)';
+}
+
+// ─── TOOTH SELECTION IN MODAL ────────────────────────────────────────────────
+function toothClick(num, nom) {
+  setActeNom(nom);
+  selectTooth(num);
+  openModal('addActe');
+}
+
+function setActeNom(type) {
+  acteNomenclature=type;
+  document.getElementById('acteNomPerm').style.cssText=`flex:1;padding:8px;border-radius:7px;border:1.5px solid ${type==='permanente'?'var(--navy)':'var(--border)'};background:${type==='permanente'?'var(--navy)':'transparent'};color:${type==='permanente'?'white':'var(--text-soft)'};font-size:12px;font-weight:700;cursor:pointer`;
+  document.getElementById('acteNomTemp').style.cssText=`flex:1;padding:8px;border-radius:7px;border:1.5px solid ${type==='temporaire'?'#2c6ea8':'var(--border)'};background:${type==='temporaire'?'#2c6ea8':'transparent'};color:${type==='temporaire'?'white':'var(--text-soft)'};font-size:12px;font-weight:700;cursor:pointer`;
+  document.getElementById('nomTypeLabel').textContent = type==='permanente'?'(Permanente FDI — 11 à 48)':'(Temporaire FDI — 51 à 85)';
+  renderToothButtons(type);
+}
+
+const teethPermanentes=['18','17','16','15','14','13','12','11','21','22','23','24','25','26','27','28','48','47','46','45','44','43','42','41','31','32','33','34','35','36','37','38'];
+const teethTemporaires=['55','54','53','52','51','61','62','63','64','65','85','84','83','82','81','71','72','73','74','75'];
+
+function renderToothButtons(type) {
+  const wrap=document.getElementById('toothBtnsWrap');
+  const teeth=type==='permanente'?teethPermanentes:teethTemporaires;
+  const qLabel={1:'Q1 Sup.Droit',2:'Q2 Sup.Gauche',3:'Q3 Inf.Gauche',4:'Q4 Inf.Droit',5:'Q5 Sup.Droit',6:'Q6 Sup.Gauche',7:'Q7 Inf.Gauche',8:'Q8 Inf.Droit'};
+  const qColors={1:'#e8f0fb',2:'#fef3e2',3:'#e8f9ee',4:'#fde8e8',5:'#dbeafe',6:'#fef9c3',7:'#dcfce7',8:'#fee2e2'};
+  wrap.innerHTML='';
+  let lastQ=null;
+  teeth.forEach(n => {
+    const q=parseInt(n[0]);
+    if(q!==lastQ){
+      const l=document.createElement('div');
+      l.style.cssText='width:100%;font-size:9.5px;font-weight:700;color:var(--text-soft);margin:4px 0 2px;';
+      l.textContent=qLabel[q]||'Q'+q; wrap.appendChild(l); lastQ=q;
+    }
+    const btn=document.createElement('button');
+    btn.textContent=n; btn.setAttribute('data-tooth',n);
+    btn.style.cssText=`width:36px;height:32px;border-radius:5px;border:1.5px solid #b0c4de;background:${qColors[q]||'#f5f5f5'};font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s;color:#333`;
+    btn.onclick=()=>selectTooth(n);
+    wrap.appendChild(btn);
+  });
+}
+
+function selectTooth(num) {
+  selectedTooth=num;
+  document.getElementById('selectedToothDisplay').textContent=num;
+  document.getElementById('toothNameDisplay').textContent=toothNames[num]||'';
+  document.querySelectorAll('#toothBtnsWrap button').forEach(b=>{
+    const sel=b.getAttribute('data-tooth')===num;
+    b.style.transform=sel?'scale(1.15)':'scale(1)';
+    b.style.boxShadow=sel?'0 0 0 2px var(--navy)':'none';
+    b.style.borderColor=sel?'var(--navy)':'#b0c4de';
+  });
+}
+function setMultiTooth(){selectedTooth='multiple';document.getElementById('selectedToothDisplay').textContent='Plusieurs';document.getElementById('toothNameDisplay').textContent='Sélection multiple';}
+function setNoTooth(){selectedTooth=null;document.getElementById('selectedToothDisplay').textContent='—';document.getElementById('toothNameDisplay').textContent='Acte général';document.querySelectorAll('#toothBtnsWrap button').forEach(b=>{b.style.transform='scale(1)';b.style.boxShadow='none';b.style.borderColor='#b0c4de';});}
+
+// ─── BILLING CALC ─────────────────────────────────────────────────────────────
+function updateActeSubtype(){
+  const val=document.getElementById('acteTypeSelect').value;
+  const panel=document.getElementById('acteInfoPanel');
+  if(val&&acteInfo[val]){
+    const info=acteInfo[val];
+    document.getElementById('acteInfoTitle').textContent=info.title;
+    document.getElementById('acteInfoDesc').textContent=info.desc;
+    document.getElementById('acteTarifBase').value=info.tarif;
+    document.getElementById('tarifSuggeré').textContent='(suggéré : '+info.tarif+' MAD)';
+    panel.style.display='block'; recalcTotal();
+    if(['detartrage','detartrage_polissage','radio_panoramique'].includes(val)) setNoTooth();
+  } else { panel.style.display='none'; document.getElementById('tarifSuggeré').textContent=''; }
+}
+
+function recalcTotal(){
+  const base=parseFloat(document.getElementById('acteTarifBase').value)||0;
+  const rv=parseFloat(document.getElementById('acteRemise').value)||0;
+  const rt=document.getElementById('acteRemiseType').value;
+  const acompte=parseFloat(document.getElementById('acteAcompte').value)||0;
+  const remise=rt==='pct'?(base*rv/100):rv;
+  const total=Math.max(0,base-remise);
+  const reste=Math.max(0,total-acompte);
+  document.getElementById('recapBase').textContent=base.toLocaleString('fr-FR')+' MAD';
+  document.getElementById('recapRemise').textContent='− '+remise.toLocaleString('fr-FR')+' MAD';
+  document.getElementById('recapTotal').textContent=total.toLocaleString('fr-FR')+' MAD';
+  document.getElementById('recapAcompte').textContent='− '+acompte.toLocaleString('fr-FR')+' MAD';
+  document.getElementById('recapReste').textContent=reste.toLocaleString('fr-FR')+' MAD';
+  document.getElementById('recapReste').style.color=reste===0?'var(--green)':reste<(total/2)?'var(--orange)':'var(--gold)';
+  if(reste===0&&total>0)document.getElementById('radio-payee').checked=true;
+  else if(acompte>0&&reste>0)document.getElementById('radio-partielle').checked=true;
+  else if(acompte===0&&total>0)document.getElementById('radio-impayee').checked=true;
+  updateStatutStyle();
+}
+
+function updateStatutStyle(){
+  const val=document.querySelector('input[name="acteStatutPaie"]:checked')?.value;
+  const cfg={payee:{b:'var(--green)',bg:'rgba(46,204,113,0.08)'},partielle:{b:'var(--gold)',bg:'rgba(201,168,76,0.08)'},impayee:{b:'var(--red)',bg:'rgba(231,76,60,0.08)'}};
+  ['payee','partielle','impayee'].forEach(k=>{
+    const l=document.getElementById('lbl-'+k);
+    if(k===val){l.style.borderColor=cfg[k].b;l.style.background=cfg[k].bg;l.style.fontWeight='700';}
+    else{l.style.borderColor='var(--border)';l.style.background='transparent';l.style.fontWeight='400';}
+  });
+}
+
+function resetActeForm(){
+  ['acteTypeSelect','acteTarifBase','acteRemise','acteAcompte','acteNotes'].forEach(f=>{const el=document.getElementById(f);if(el)el.value='';});
+  document.getElementById('acteInfoPanel').style.display='none';
+  document.getElementById('tarifSuggeré').textContent='';
+  document.getElementById('radio-partielle').checked=true;
+  recalcTotal(); setNoTooth();
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+const pageInfo={
+  dashboard:{title:'Tableau de bord',sub:'Vue d\'ensemble du cabinet'},
+  agenda:{title:'Agenda',sub:'Gestion des rendez-vous'},
+  patients:{title:'Patients',sub:'Dossiers patients'},
+  soins:{title:'Soins & Traitements',sub:'Schéma dentaire & actes'},
+  facturation:{title:'Facturation',sub:'Factures et paiements'},
+  stats:{title:'Statistiques',sub:'Analyse de l\'activité'}
+};
+function switchPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  const info=pageInfo[id];
+  if(info){document.getElementById('pageTitle').textContent=info.title;document.getElementById('pageSub').textContent=info.sub;}
+}
+function openModal(id){document.getElementById('modal-'+id).classList.add('open');}
+function closeModal(id){document.getElementById('modal-'+id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+// ─── NOTE D'HONORAIRES ────────────────────────────────────────────────────────
+function generateHonoraires(acteData) {
+  const patientId = acteData.patientId;
+  const patient   = patients[patientId] || {prenom:'', nom:''};
+  const today     = new Date(acteData.date+'T12:00').toLocaleDateString('fr-FR');
+  const addConsult = document.getElementById('addConsultation')?.checked;
+  const addRadio   = document.getElementById('addRadio')?.checked;
+
+  // Build lines
+  const lines = [];
+  if(addConsult) lines.push({ dent: acteData.dent||'—', code:'C', date:today, lettre:'C', valeur:'C', montant:100 });
+  if(addRadio)   lines.push({ dent: acteData.dent||'—', code:'T159', date:today, lettre:'Z6', valeur:'Z', montant:100 });
+
+  // Main acte line
+  const acteCode = acteData.acteInfo?.code || getActeCode(acteData.acteType);
+  const acteLettre = getActeLettre(acteData.acteType);
+  const acteValeur = getActeValeur(acteData.acteType);
+  lines.push({ dent: acteData.dent||'—', code: acteCode, date: new Date(acteData.date+'T12:00').toLocaleDateString('fr-FR'), lettre: acteLettre, valeur: acteValeur, montant: acteData.total });
+
+  const total = lines.reduce((s,l)=>s+l.montant, 0);
+
+  const lignesHTML = lines.map(l=>`
+    <tr>
+      <td style="border:1px solid #999;padding:6px 8px;text-align:center">${l.dent}</td>
+      <td style="border:1px solid #999;padding:6px 8px;text-align:center;font-weight:700">${l.code}</td>
+      <td style="border:1px solid #999;padding:6px 8px;text-align:center">${l.date}</td>
+      <td style="border:1px solid #999;padding:6px 8px;text-align:center">${l.lettre}</td>
+      <td style="border:1px solid #999;padding:6px 8px;text-align:center">${l.valeur}</td>
+      <td style="border:1px solid #999;padding:6px 8px;text-align:right;font-weight:700">${l.montant.toLocaleString('fr-FR')},00 dh</td>
+      <td style="border:1px solid #999;padding:6px 8px;width:100px"></td>
+    </tr>`).join('');
+
+  // Empty rows
+  let emptyRows = '';
+  for(let i=lines.length; i<8; i++) {
+    emptyRows += `<tr><td style="border:1px solid #999;padding:10px 8px">&nbsp;</td><td style="border:1px solid #999"></td><td style="border:1px solid #999"></td><td style="border:1px solid #999"></td><td style="border:1px solid #999"></td><td style="border:1px solid #999"></td><td style="border:1px solid #999"></td></tr>`;
+  }
+
+  const modeEspeces = acteData.mode==='especes' ? '☑' : '☐';
+  const modeCheque  = acteData.mode==='cheque'  ? '☑' : '☐';
+
+  const html = `
+  <div id="honorairesPrintArea" style="font-family:Arial,sans-serif;font-size:12px;color:#000;padding:10px">
+
+    <!-- EN-TÊTE -->
+    <div style="text-align:center;margin-bottom:16px">
+      <h2 style="font-size:18px;font-weight:bold;margin-bottom:12px">Notes d'honoraires</h2>
+    </div>
+
+    <!-- INFO DENTISTE -->
+    <div style="border:1px solid #999;padding:8px 12px;margin-bottom:12px;font-size:11px">
+      <strong>Nom et prénom du médecin dentiste :</strong> DR. Elghazi Elhoussaini Amine<br>
+      <strong>n° de l'INPE :</strong> 074150491 &nbsp;&nbsp;
+      <strong>n° de l'ICE :</strong> 001650089000085 &nbsp;&nbsp;
+      <strong>n° de l'IF :</strong> 691354432
+    </div>
+
+    <!-- PATIENT + DATE -->
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:12px">
+      <div><strong>Nom et prénom :</strong> <span style="text-transform:uppercase">${patient.prenom} ${patient.nom}</span></div>
+      <div><strong>date :</strong> ${today}</div>
+    </div>
+
+    <!-- TABLEAU ACTES -->
+    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px">
+      <thead>
+        <tr style="background:#f5f5f5">
+          <th style="border:1px solid #999;padding:5px 4px;text-align:center;font-size:10px">Dents<br>traitées<br><span style="font-size:9px">أسنان معالجة</span></th>
+          <th style="border:1px solid #999;padding:5px 4px;text-align:center;font-size:10px">Code des<br>actes<br><span style="font-size:9px">رمز العمليات</span></th>
+          <th style="border:1px solid #999;padding:5px 4px;text-align:center;font-size:10px">Dates des<br>actes<br><span style="font-size:9px">تاريخ العمليات</span></th>
+          <th style="border:1px solid #999;padding:5px 4px;text-align:center;font-size:10px">Lettre clé+<br>Cotation NGAP<br><span style="font-size:9px">معامل العمليات</span></th>
+          <th style="border:1px solid #999;padding:5px 4px;text-align:center;font-size:10px">Valeur clé<br><span style="font-size:9px">قيمة المعامل</span></th>
+          <th style="border:1px solid #999;padding:5px 4px;text-align:center;font-size:10px">Montant<br>facturé<br><span style="font-size:9px">المبلغ المفوتر</span></th>
+          <th style="border:1px solid #999;padding:5px 4px;text-align:center;font-size:10px">Signature et<br>cachet du<br>chirurgien<br>dentiste</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${lignesHTML}
+        ${emptyRows}
+      </tbody>
+    </table>
+
+    <!-- TOTAL -->
+    <div style="text-align:center;margin:12px 0;font-size:14px;font-weight:bold">
+      Total : ${total.toLocaleString('fr-FR')},00 dh
+    </div>
+
+    <!-- MODE DE PAIEMENT -->
+    <div style="display:flex;align-items:center;gap:20px;border:1px solid #999;padding:8px 12px;font-size:12px;margin-bottom:16px">
+      <strong>mode de payement :</strong>
+      <span>${modeEspeces} espèce</span>
+      <span>${modeCheque} chèque</span>
+    </div>
+
+    <!-- SCHÉMA DENTAIRE CIM-10 -->
+    <div style="text-align:center;margin-top:8px">
+      <div style="font-size:10px;font-weight:bold;margin-bottom:4px">CIM - 10</div>
+      <svg viewBox="0 0 300 200" width="260" height="175" style="display:block;margin:0 auto">
+        <!-- Axe H-B-D-G -->
+        <line x1="150" y1="5" x2="150" y2="195" stroke="#aaa" stroke-width="0.5"/>
+        <line x1="5" y1="100" x2="295" y2="100" stroke="#aaa" stroke-width="0.5"/>
+        <text x="148" y="12" text-anchor="middle" font-size="8" fill="#555">H</text>
+        <text x="148" y="195" text-anchor="middle" font-size="8" fill="#555">B</text>
+        <text x="8" y="102" text-anchor="start" font-size="8" fill="#555">D</text>
+        <text x="287" y="102" text-anchor="start" font-size="8" fill="#555">G</text>
+
+        <!-- MAXILLAIRE SUPERIEUR — Q1 droite (18→11) -->
+        ${svgTeeth([18,17,16,15,14,13,12,11], 'right', 'upper', acteData.dent)}
+        <!-- MAXILLAIRE SUPERIEUR — Q2 gauche (21→28) -->
+        ${svgTeeth([21,22,23,24,25,26,27,28], 'left', 'upper', acteData.dent)}
+        <!-- MANDIBULE — Q4 droite (48→41) -->
+        ${svgTeeth([48,47,46,45,44,43,42,41], 'right', 'lower', acteData.dent)}
+        <!-- MANDIBULE — Q3 gauche (31→38) -->
+        ${svgTeeth([31,32,33,34,35,36,37,38], 'left', 'lower', acteData.dent)}
+      </svg>
+    </div>
+
+    <!-- MENTIONS LÉGALES -->
+    <div style="font-size:9px;color:#555;margin-top:10px;text-align:center;border-top:1px solid #ddd;padding-top:8px">
+      Le praticien est prié de préciser la dent traitée, l'acte pratiqué en indiquant la nature des soins et son coefficient d'après la Nomenclature des actes professionnels.
+    </div>
+  </div>`;
+
+  document.getElementById('honorairesPreview').innerHTML = html;
+  openModal('honoraires');
+}
+
+function svgTeeth(nums, side, jaw, selectedDent) {
+  const isUpper = jaw === 'upper';
+  const isRight = side === 'right';
+  const cx = 150;
+  const cy = 100;
+  // Radii for arcs
+  const rx = isRight ? [70,62,54,47,40,33,25,17] : [17,25,33,40,47,54,62,70];
+  const ryOuter = isUpper ? [20,28,34,38,40,41,41,40] : [20,28,34,38,40,41,41,40];
+
+  return nums.map((n, i) => {
+    const xOff = isRight ? -(rx[i]) : rx[i];
+    const yOff = isUpper ? -(ryOuter[i]) : ryOuter[i];
+    const tx = cx + xOff;
+    const ty = cy + yOff;
+    const isSelected = String(n) === String(selectedDent);
+    const fill = isSelected ? '#C9A84C' : 'none';
+    const stroke = isSelected ? '#C9A84C' : '#333';
+    return `<circle cx="${tx}" cy="${ty}" r="8" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+            <text x="${tx}" y="${ty+3}" text-anchor="middle" font-size="6" fill="${isSelected?'white':'#333'}" font-weight="${isSelected?'bold':'normal'}">${n}</text>`;
+  }).join('');
+}
+
+function getActeCode(type) {
+  const map = {
+    'D700':'D700','D700_2':'D700','D701':'D701','D707':'D707','D708':'D708','D710':'D710',
+    'D702':'D702','D703':'D703','D704':'D704','D705_mol':'D705','D705_prem':'D705',
+    'DTR_D48':'DTR','DTR_D24':'DTR',
+    'D713':'D713','D714':'D714','D716':'D716','D717':'D717','D720':'D720',
+    'D721':'D721','D722':'D722','D724':'D724','D728':'D728','D730':'D730','D731':'D731',
+    'D733':'D733','D734':'D734','D736':'D736','D737':'D737','D738':'D738',
+    'D740':'D740','D741':'D741','D743':'D743','D744':'D744','D745':'D745',
+    'D752':'D752','D754':'D754','D755':'D755','D756':'D756','D759':'D759',
+    'D760':'D760','D761':'D761','D769':'D769',
+    'D762':'D762','D763':'D763','D764':'D764','D765':'D765','D766':'D766',
+    'D767':'D767','D768':'D768','D770':'D770','D771':'D771','D772':'D772',
+    'D773':'D773','D774':'D774','D776':'D776','D779':'D779','D780':'D780',
+    'T156':'T156','T157':'T157','T158':'T158','T169':'T169',
+    'implant_pose':'IMP','implant_ccm':'IMP','implant_ccc':'IMP','implant_imax':'IMP',
+    'D620':'D620','D622':'D622','D823':'D823','D831':'D831','D822':'D822','D543':'D543'
+  };
+  return map[type] || type;
+}
+function getActeLettre(type) {
+  if(type.startsWith('T')) return 'Z6';
+  if(type.startsWith('implant')) return 'HC';
+  return 'D' + (acteInfo[type]?.tarif || '');
+}
+function getActeValeur(type) {
+  if(type.startsWith('T')) return 'Z';
+  if(type.startsWith('implant')) return 'HC';
+  return 'D';
+}
+
+function printHonoraires() {
+  const printContents = document.getElementById('honorairesPrintArea').innerHTML;
+  const win = window.open('', '_blank', 'width=800,height=900');
+  win.document.write(`<!DOCTYPE html><html><head><title>Note d'honoraires — Dr. Elghazi</title>
+  <style>
+    body { font-family:Arial,sans-serif; font-size:12px; color:#000; margin:20px; }
+    @media print { body { margin:10mm; } }
+    table { border-collapse:collapse; width:100%; }
+    th,td { border:1px solid #999; padding:5px 6px; }
+  </style></head><body>`);
+  win.document.write(printContents);
+  win.document.write('</body></html>');
+  win.document.close();
+  win.focus();
+  setTimeout(()=>win.print(), 500);
+}
+
+</script>
+</body>
+</html>
